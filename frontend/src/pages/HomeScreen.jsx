@@ -1,21 +1,24 @@
-import React from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const HomeScreen = () => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 100 }}>
-      <h1>Welcome to Our Shop</h1>
-      <button style={{ margin: 12, padding: "12px 32px" }} onClick={() => navigate("/login")}>
-        Login
-      </button>
-      <button style={{ margin: 12, padding: "12px 32px" }} onClick={() => navigate("/signup")}>
-        Sign Up
-      </button>
-      <button style={{ margin: 12, padding: "12px 32px" }} onClick={() => navigate("/shop")}>
-        Continue without account
-      </button>
+    <div>
+      <h1>Welcome to E-commerce</h1>
+      {user ? (
+        <div>
+          <p>Hello, {user.first_name} {user.last_name} ({user.email})</p>
+          <button onClick={logout}>Logout</button>
+        </div>
+      ) : (
+        <div>
+          <button onClick={() => navigate("/login")}>Login</button>
+          <button onClick={() => navigate("/register")}>Register</button>
+        </div>
+      )}
     </div>
   );
 };

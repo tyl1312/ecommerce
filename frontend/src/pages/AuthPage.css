@@ -85,12 +85,15 @@ body {
 .login-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
+}
+
+.form-group input:not(:last-child) {
+    margin-bottom: 12px;
 }
 
 .form-group.double {
@@ -167,5 +170,9 @@ body {
 }
 
 .social-btn.google { color: #ea4335; }
-.social-btn.facebook { color: #1877f3; }
-.social-btn.apple { color: #222; }
+
+.captcha-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}   
