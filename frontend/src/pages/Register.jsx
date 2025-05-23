@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const Register = ({ captchaToken }) => { 
-    const { register } = useAuth();
+const Register = ({ captchaToken }) => {
     const navigate = useNavigate();
+    const { register } = useAuth();
     const [first_name, setFirstname] = useState("");
     const [last_name, setLastname] = useState("");
     const [email, setEmail] = useState("");
@@ -30,22 +30,20 @@ const Register = ({ captchaToken }) => {
             return;
         }
 
-        const result = await register({
-            email: email,
-            phone_number: phone_number,
-            password: password,
-            first_name: first_name,
-            last_name: last_name,
-            home_address: home_address,
-            captchaToken
+        const res = await fetch("/api/request-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
         });
-
-        if (result.success) {
-            navigate("/");
-        } else {
-            setError(result.message || "Registration failed");
-        }
         setLoading(false);
+        if (res.ok) {
+            sessionStorage.setItem("pendingRegistration", JSON.stringify({
+                email, phone_number, password, first_name, last_name, home_address, captchaToken
+            }));
+            navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+        } else {
+            setError("Failed to send OTP.");
+        }
     };
 
     return (

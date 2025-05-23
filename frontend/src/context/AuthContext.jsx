@@ -93,8 +93,6 @@ export const AuthProvider = ({ children }) => {
     };
 
 
-
-
     const register = async (userData, captchaToken) => {
         try {
             setLoading(true);

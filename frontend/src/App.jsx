@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import HomeScreen from './pages/HomeScreen';
 import AuthPage from './pages/AuthPage';
 import AuthCallback from "./pages/AuthCallback";
+import OtpVerificationPage from './pages/OtpVerificationPage';
 import Profile from './pages/Profile';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Route path="/" element={<HomeScreen />} />
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route path="/verify-otp" element={<OtpVerificationPage />} />
       <Route path="/user" element={<Profile />} />
       <Route path="/auth/callback" element={<AuthCallback />} /> 
     </Routes>

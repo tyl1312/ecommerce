@@ -1,7 +1,31 @@
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const axios = require('axios');
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const { generateOTP, sendOTP, storeOTP, verifyOTP } = require('../utils/otp');
+
+const requestOTP = async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
+    const otp = generateOTP();
+    await sendOTP(email, otp);
+    await storeOTP(email, otp);
+    res.status(200).json({ message: 'OTP sent' });
+}
+
+const verifyOtp = async (req, res) => {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ message: "Email and OTP are required" });
+
+    const valid = await verifyOTP(email, otp);
+    if (valid) {
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+};
 
 const generateAccessToken = (user) => {
     return jwt.sign(
@@ -51,7 +75,7 @@ const verifyCaptcha = async (captchaToken) => {
     }
 };
 
-const signup = async (req, res) => {
+const register = async (req, res) => {
     try {
         const { email, password, phone_number, first_name, last_name, home_address, captchaToken } = req.body;
 
@@ -286,11 +310,13 @@ const getCurrentUser = async (req, res) => {
 };
 
 module.exports = {
-    signup,
+    register,
     login,
     loginWithGoogle,
     logout,
     refresh,
     getCurrentUser,
-    updateProfile
+    updateProfile,
+    requestOTP,
+    verifyOtp
 };
