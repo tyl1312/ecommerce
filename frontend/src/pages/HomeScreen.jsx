@@ -7,7 +7,7 @@ const HomeScreen = () => {
 
   return (
     <div>
-      <h1>Welcome to E-commerce</h1>
+      <h1>Welcome to our Website</h1>
       {user ? (
         <div>
           <p>Hello, {user.first_name} {user.last_name} ({user.email})</p>
