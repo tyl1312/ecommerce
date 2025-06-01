@@ -30,15 +30,17 @@ const Dashboard = () => {
                 console.error('Error fetching courses:', error);
             }
         };
-        fetchCourses();
-    }, []);
-    
-    const handleResendEmail = async() => {
+        if (loggedIn) {
+            fetchCourses();
+        }
+    }, [loggedIn]);
+
+    const handleResendEmail = async () => {
         console.log('Resend email');
         try {
             const response = await axios.post(
-                import.meta.env.VITE_APP_API_URL + '/user/resend-email', 
-                { email: userData.email }, 
+                import.meta.env.VITE_APP_API_URL + '/user/resend-email',
+                { email: userData.email },
                 { withCredentials: true });
             if (response.status === 200) {
                 console.log('Email sent');
@@ -58,7 +60,7 @@ const Dashboard = () => {
     };
 
     const handleQuizClick = (courseTitle, quizId, quizTitle) => {
-        if(courseTitle != null){
+        if (courseTitle != null) {
             console.log("-----------------------------")
             dispatch(setCourseData(courseTitle, quizId, quizTitle));
         }
@@ -71,12 +73,12 @@ const Dashboard = () => {
     return (
         <section id="dashboard" className="w-full min-h-[calc(100vh-72px)] py-14 px-10">
             {!userData.isVerified && showAlert && (
-                <Alert severity="warning" onClose={() => {setShowAlert(false)}}>
+                <Alert severity="warning" onClose={() => { setShowAlert(false) }}>
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm">Your account is currently not verified.</p>
                         </div>
-                        
+
                         <div>
                             <button className="text-blue-500 hover:underline" onClick={handleResendEmail}>Resend Email</button>
                         </div>
@@ -84,14 +86,14 @@ const Dashboard = () => {
                 </Alert>
             )}
 
-        {popup && (
+            {popup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                     <div className="bg-white p-10 rounded-lg">
                         <img
                             className='justify-center items-center mx-auto'
                             style={{ width: "200px", height: "200px" }}
                             alt='Success Icon'
-                            src={success}/>
+                            src={success} />
                         <Typography variant="h5" component="h2" gutterBottom>
                             Email was sent successfully!
                         </Typography>
@@ -100,7 +102,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-        )}
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
                 {courses.map(course => (

@@ -67,14 +67,42 @@ const courseController = {
     // Path: /course/all
     getAllCourses: async (req, res) => {
         try {
-            const courses = await Course.find().populate('quiz');
+            let courses = await Course.find();
+            
+            // If no courses are found, create some sample data
             if (!courses || courses.length === 0) {
-                throw new NotFound({ message: 'No courses found', req }, 'info');
+                const sampleCourses = [
+                    {
+                        courseTitle: "Web Security Fundamentals",
+                        description: "Learn the basics of web security including common vulnerabilities and how to protect against them.",
+                        level: "Beginner",
+                        estimatedTime: 120,
+                        quiz: []
+                    },
+                    {
+                        courseTitle: "Advanced Authentication",
+                        description: "Deep dive into authentication systems, JWT, OAuth and modern security practices.",
+                        level: "Intermediate",
+                        estimatedTime: 180,
+                        quiz: []
+                    }
+                ];
+                
+                // Insert sample courses
+                courses = await Course.insertMany(sampleCourses);
+                
+                return res.status(200).json({
+                    items: courses,
+                    total: courses.length,
+                    message: "Sample courses created successfully"
+                });
             }
 
-            const total = courses.length;
-            new SuccessResponse({ message: 'Courses found', req });
-            return res.status(200).json({ items: courses, total });
+            return res.status(200).json({
+                items: courses,
+                total: courses.length,
+                message: "Courses retrieved successfully"
+            });
         } catch (error) {
             return handleErrorResponse(error, req, res);
         }

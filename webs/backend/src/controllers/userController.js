@@ -31,94 +31,86 @@ const userController = {
             const { username, email, password, confirmPassword } = req.body;
             const recaptchaResponse = req.body['g-recaptcha-response'];
 
-            if (recaptchaResponse) {
-                try {
-                    const recaptchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaResponse}`;
-                    const recaptchaVerifyResponse = await fetch(recaptchaVerifyUrl, { method: 'POST' });
-                    const recaptchaVerifyData = await recaptchaVerifyResponse.json();
-                    if (!recaptchaVerifyData.success) {
-                        throw new BadRequest({ message: 'reCAPTCHA verification failed', req }, 'info');
-                    }
-
-                    continueRegister();
-
-                } catch (error) {
-                    return handleErrorResponse(error, req, res);
-                }
-            } else {
+            if (!recaptchaResponse) {
                 throw new BadRequest({ message: 'reCAPTCHA verification failed', req }, 'info');
             }
-            await continueRegister();
 
-            async function continueRegister() {
-                try {
-                    if (!username || !email || !password || !confirmPassword) {
-                        throw new BadRequest({ message: 'All fields are required', req }, 'info');
-                    }
-    
-                    // check if username has invalid characters
-                    if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                        throw new BadRequest({ message: 'Username is invalid, only contain a-z, A-Z, 0-9', req }, 'info');
-                    }
-    
-                    if (username.length < 3) {
-                        throw new BadRequest({ message: 'Username must be at least 3 characters', req }, 'info');
-                    }
-                    
-                    // check if email is valid
-                    if (!validator.isEmail(email)) {
-                        throw new BadRequest({ message: 'Invalid email', req }, 'info');
-                    }
-
-                    // check if user already exists
-                    const existingUser = await User.findOne({ username });
-                    if (existingUser) {
-                        throw new BadRequest({ message: 'Username already exists', req }, 'info');
-                    }
-    
-                    const existingEmail = await User.findOne({ email });
-                    if (existingEmail) {
-                        throw new BadRequest({ message: 'Email already exists', req }, 'info');
-                    }
-    
-                    if (!validator.isStrongPassword(password)){
-                        throw new BadRequest({ message: 'Password is too weak', req }, 'info');
-                    }
-    
-                    if (password !== confirmPassword) {
-                        throw new BadRequest({ message: 'Password does not match', req }, 'info');
-                    }
-    
-                    let verificationToken = crypto.randomBytes(32).toString('hex');
-                    const newUser = new User({ username, email, password, verifyToken: verificationToken });
-                    await newUser.save();
-
-                    // Create a progress document for the new user
-                    await Progress.create({
-                        user: newUser._id,
-                        completedQuizzes: [],
-                        totalScore: 0,
-                        totalCompletedQuizzes: 0,
-                    })
-
-                    res.cookie('verificationToken', verificationToken, { httpOnly: true, secure: true, sameSite: 'None', maxAge: 1000 * 60 * 30 }); 
-    
-                    // send verification email
-                    const verificationUrl = `${process.env.SERVER_URL}/user/verify-email/${verificationToken}`;
-                    const html = `<p>Please click <a href="${verificationUrl}">here</a> to verify your email address.</p>`;
-                    await sendMail(email, 'Verify your email address', html);
-    
-                    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(newUser._id);
-                    
-                    new Created({ message: 'Registered Successfully', req });
-                    // send token
-                    sendToken(res, newUser, accessToken, refreshToken, "Registered Successfully", 201);
-                } catch (error) {
-                    return handleErrorResponse(error, req, res);
+            try {
+                const recaptchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaResponse}`;
+                const recaptchaVerifyResponse = await fetch(recaptchaVerifyUrl, { method: 'POST' });
+                const recaptchaVerifyData = await recaptchaVerifyResponse.json();
+                
+                if (!recaptchaVerifyData.success) {
+                    throw new BadRequest({ message: 'reCAPTCHA verification failed', req }, 'info');
                 }
+
+                // Continue with registration
+                if (!username || !email || !password || !confirmPassword) {
+                    throw new BadRequest({ message: 'All fields are required', req }, 'info');
+                }
+
+                // Check if username has invalid characters
+                if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                    throw new BadRequest({ message: 'Username is invalid, only contain a-z, A-Z, 0-9', req }, 'info');
+                }
+
+                if (username.length < 3) {
+                    throw new BadRequest({ message: 'Username must be at least 3 characters', req }, 'info');
+                }
+                
+                // Check if email is valid
+                if (!validator.isEmail(email)) {
+                    throw new BadRequest({ message: 'Invalid email', req }, 'info');
+                }
+
+                // Check if user already exists
+                const existingUser = await User.findOne({ username });
+                if (existingUser) {
+                    throw new BadRequest({ message: 'Username already exists', req }, 'info');
+                }
+
+                const existingEmail = await User.findOne({ email });
+                if (existingEmail) {
+                    throw new BadRequest({ message: 'Email already exists', req }, 'info');
+                }
+
+                if (!validator.isStrongPassword(password)){
+                    throw new BadRequest({ message: 'Password is too weak', req }, 'info');
+                }
+
+                if (password !== confirmPassword) {
+                    throw new BadRequest({ message: 'Password does not match', req }, 'info');
+                }
+
+                let verificationToken = crypto.randomBytes(32).toString('hex');
+                const newUser = new User({ username, email, password, verifyToken: verificationToken });
+                await newUser.save();
+
+                // Create a progress document for the new user
+                await Progress.create({
+                    user: newUser._id,
+                    completedQuizzes: [],
+                    totalScore: 0,
+                    totalCompletedQuizzes: 0,
+                })
+
+                res.cookie('verificationToken', verificationToken, { httpOnly: true, secure: true, sameSite: 'None', maxAge: 1000 * 60 * 30 }); 
+
+                // Send verification email
+                const verificationUrl = `${process.env.SERVER_URL}/user/verify-email/${verificationToken}`;
+                const html = `<p>Please click <a href="${verificationUrl}">here</a> to verify your email address.</p>`;
+                await sendMail(email, 'Verify your email address', html);
+
+                const { accessToken, refreshToken } = await generateAccessAndRefreshToken(newUser._id);
+                
+                new Created({ message: 'Registered Successfully', req });
+                // Send token
+                sendToken(res, newUser, accessToken, refreshToken, "Registered Successfully", 201);
+
+            } catch (error) {
+                return handleErrorResponse(error, req, res);
             }
-        }
-        catch (error) {
+        } catch (error) {
             return handleErrorResponse(error, req, res);
         }
     },
@@ -139,55 +131,49 @@ const userController = {
                     if (!recaptchaVerifyData.success) {
                         throw new BadRequest({ message: 'reCAPTCHA verification failed', req }, 'info');
                     }
-
-                    continueLogin();
                 } catch (error) {
                     return handleErrorResponse(error, req, res);
                 }
-            } else {
-                continueLogin();
             }
-            await continueLogin();
-
-            async function continueLogin() {
-                try {
-                    if (!email || !password) {
-                        throw new BadRequest({ message: 'All fields are required', req }, 'info');
-                    }
-
-                    // check if email is valid
-                    if (!validator.isEmail(email)) {
-                        throw new BadRequest({ message: 'Invalid email', req }, 'info');
-                    }
-        
-                    const user = await User.findOne({ email }).select('-refreshToken -passwordHistory -resetPasswordToken -resetPasswordExpires -verifyToken');
-                    if (!user) {
-                        throw new Unauthorized({ message: 'Incorrect Email or Password', req }, 'info');
-                    }
-        
-                    if (user.loginAttempts >= 5 && !recaptchaResponse) {
-                        throw new Unauthorized({ message: 'Please complete the reCAPTCHA', req }, 'info');
-                    }
-        
-                    const isMatch = await user.isCorrectPassword(password);
-                    if (!isMatch) {
-                        user.loginAttempts += 1;
-                        await user.save();
-                        throw new Unauthorized({ message: 'Incorrect Email or Password', req }, 'info');
-                    }
-        
-                    user.loginAttempts = 0;
-                    await user.save();
-        
-                    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user.id);
-                    user.loginAttempts = undefined;
-                    user.password = undefined;
-    
-                    new SuccessResponse({ message: `Welcome back, ${user.username}`, req });
-                    sendToken(res, user, accessToken, refreshToken, `Welcome back, ${user.username}`, 200);    
-                } catch (error) {
-                    return handleErrorResponse(error, req, res);
+            
+            // Continue with login regardless of recaptcha path
+            try {
+                if (!email || !password) {
+                    throw new BadRequest({ message: 'All fields are required', req }, 'info');
                 }
+
+                // check if email is valid
+                if (!validator.isEmail(email)) {
+                    throw new BadRequest({ message: 'Invalid email', req }, 'info');
+                }
+    
+                const user = await User.findOne({ email }).select('-refreshToken -passwordHistory -resetPasswordToken -resetPasswordExpires -verifyToken');
+                if (!user) {
+                    throw new Unauthorized({ message: 'Incorrect Email or Password', req }, 'info');
+                }
+    
+                if (user.loginAttempts >= 5 && !recaptchaResponse) {
+                    throw new Unauthorized({ message: 'Please complete the reCAPTCHA', req }, 'info');
+                }
+    
+                const isMatch = await user.isCorrectPassword(password);
+                if (!isMatch) {
+                    user.loginAttempts += 1;
+                    await user.save();
+                    throw new Unauthorized({ message: 'Incorrect Email or Password', req }, 'info');
+                }
+    
+                user.loginAttempts = 0;
+                await user.save();
+    
+                const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user.id);
+                user.loginAttempts = undefined;
+                user.password = undefined;
+    
+                new SuccessResponse({ message: `Welcome back, ${user.username}`, req });
+                sendToken(res, user, accessToken, refreshToken, `Welcome back, ${user.username}`, 200);    
+            } catch (error) {
+                return handleErrorResponse(error, req, res);
             }
         } catch (error) {
             return handleErrorResponse(error, req, res);
