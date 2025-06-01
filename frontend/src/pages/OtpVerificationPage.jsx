@@ -107,16 +107,10 @@ const OtpVerificationPage = () => {
     };
 
     const handleResend = async () => {
-        if (resendCount >= 3) {
-            setError("Too many attempts. Please try again later.");
-            return;
-        }
-
-        setResendLoading(true);
-        setError("");
-        setMessage("");
-
         try {
+            setResendLoading(true);
+            setError("");
+            
             const res = await fetch(`${import.meta.env.VITE_API_URL}/api/otp/request`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -126,21 +120,22 @@ const OtpVerificationPage = () => {
                 }),
             });
 
-            setResendLoading(false);
-
             if (res.ok) {
-                setMessage("OTP resent to your email.");
+                setMessage("OTP sent successfully!");
+                setResendCount(prev => prev + 1);
                 setTimer(60);
-                setResendCount(count => count + 1);
             } else {
+                const data = await res.json();
+
                 if (res.status === 429) {
-                    setError("Too many attempts. Please try again later.");
+                    setError(data.error || "Please wait before requesting another OTP.");
                 } else {
-                    setError("Failed to resend OTP.");
+                    setError(data.message || "Failed to resend OTP.");
                 }
             }
         } catch (err) {
-            setError("OTP resend failed.");
+            console.error("Resend error:", err);
+            setError("Failed to resend OTP. Please try again.");
         } finally {
             setResendLoading(false);
         }
@@ -149,7 +144,7 @@ const OtpVerificationPage = () => {
     const isResendDisabled = resendCount >= 3 || timer > 0 || resendLoading;
 
     const getPageTitle = () => {
-        return isPasswordReset ? "Verify OTP for Password Reset" : "Verify your email";
+        return "Verify your email";
     };
 
     return (

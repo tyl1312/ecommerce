@@ -48,11 +48,15 @@ const Register = ({ captchaToken }) => {
             if (res.ok) {
                 const data = await res.json();
                 sessionStorage.setItem("registrationId", data.registrationId);
-                
                 navigate(`/otp/verify?email=${encodeURIComponent(email)}&purpose=registration`);
             } else {
                 const data = await res.json();
-                setError(data.message || "Registration failed.");
+
+                if (res.status === 429) {
+                    setError(data.error || "Too many attempts. Please try again later.");
+                } else {
+                    setError(data.message || "Registration failed.");
+                }
             }
         } catch (err) {
             console.error('Registration error:', err);
@@ -99,7 +103,7 @@ const Register = ({ captchaToken }) => {
                 />
             </div>
             <button className="submit-btn" type="submit" disabled={loading || !captchaToken}>
-                {loading ? "Sending OTP..." : "Create account"}
+                {loading ? "Redirecting..." : "Create account"}
             </button>
             {error && <div className="error-message">{error}</div>}
         </form>
