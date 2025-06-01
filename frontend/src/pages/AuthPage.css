@@ -171,8 +171,40 @@ body {
 
 .social-btn.google { color: #ea4335; }
 
+/*Forgot Password Link*/
+.forgot-password {
+    text-align: right;
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+.forgot-password a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}
+
+/*ReCaptcha*/
 .captcha-container {
     display: flex;
     justify-content: center;
     margin-top: 16px;
 }   
+
+.captcha-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.captcha-required-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-bottom: 10px;
+}

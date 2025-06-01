@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
-const Login = ({ captchaToken }) => {
+const Login = ({ captchaToken, onLoginFailure, onLoginSuccess, requiresCaptcha }) => {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [Identifier, setIdentifier] = useState("");
-    const [Password, setPassword] = useState("");
+    const [identifier, setIdentifier] = useState("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -14,23 +14,35 @@ const Login = ({ captchaToken }) => {
         e.preventDefault();
         setError("");
         setLoading(true);
-        if (!Identifier || !Password) {
-            setError("Please enter your email/phone and password.");
+
+        if (!identifier || !password) {
+            setError("Please enter your email/username and password.");
             setLoading(false);
             return;
         }
-        if (!captchaToken) {
-            setError("Please complete the captcha.");
+
+        if (requiresCaptcha && !captchaToken) {
+            setError("Please complete the captcha verification.");
             setLoading(false);
             return;
         }
-        const result = await login(Identifier, Password, captchaToken); // <-- pass captchaToken
-        if (result.success) {
-            navigate("/");
-        } else {
-            setError(result.message || "Login failed");
+
+        try {
+            const result = await login(identifier, password, captchaToken, requiresCaptcha);
+            
+            if (result.success) {
+                onLoginSuccess?.();
+                navigate("/");
+            } else {
+                setError(result.message || "Login failed");
+                onLoginFailure?.();
+            }
+        } catch (error) {
+            setError("Network error. Please try again.");
+            onLoginFailure?.();
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     return (
@@ -39,9 +51,9 @@ const Login = ({ captchaToken }) => {
                 <input
                     type="text"
                     name="identifier"
-                    placeholder="Email or Phone Number"
+                    placeholder="Email or Username"
                     required
-                    value={Identifier}
+                    value={identifier}
                     onChange={e => setIdentifier(e.target.value)}
                 />
                 <input
@@ -49,13 +61,29 @@ const Login = ({ captchaToken }) => {
                     name="password"
                     placeholder="Password"
                     required
-                    value={Password}
+                    value={password}
                     onChange={e => setPassword(e.target.value)}
                 />
             </div>
-            <button className="submit-btn" type="submit" disabled={loading || !captchaToken}>
-                Login
+
+            <div className="forgot-password">
+                <Link to="/forgot-password">Forgot Password?</Link>
+            </div>
+
+            {requiresCaptcha && !captchaToken && (
+                <div className="captcha-required-message">
+                    Please complete the reCAPTCHA verification below
+                </div>
+            )}
+
+            <button 
+                className="submit-btn" 
+                type="submit" 
+                disabled={loading || (requiresCaptcha && !captchaToken)}
+            >
+                {loading ? "Logging in..." : "Login"}
             </button>
+            
             {error && <div className="error-message">{error}</div>}
         </form>
     );

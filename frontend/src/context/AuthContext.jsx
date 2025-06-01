@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
                 return;
             }
 
-            const response = await fetch('/api/user', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
                 const userData = await response.json();
                 setUser(userData);
             } else if (response.status === 403) {
-                const refresh = await fetch('/api/refresh', {
+                const refresh = await fetch(`${import.meta.env.VITE_API_URL}/api/refresh`, {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -62,8 +62,8 @@ export const AuthProvider = ({ children }) => {
                     localStorage.setItem('accessToken', newToken);
                     setToken(newToken);
 
-                    // Retry with new token
-                    const retryAuth = await fetch('/api/user', {
+                    //Retry with new token
+                    const retryAuth = await fetch(`${import.meta.env.VITE_API_URL}/api/user`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -93,49 +93,69 @@ export const AuthProvider = ({ children }) => {
     };
 
 
-    const register = async (userData, captchaToken) => {
+    const register = async (registrationId, otp) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/register`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(userData, captchaToken),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    registrationId,
+                    otp
+                }),
                 credentials: 'include'
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Registration failed');
-            }
-
             const data = await response.json();
-            localStorage.setItem('accessToken', data.accessToken);
-            setToken(data.accessToken);
-            setUser(data.user);
-            return { success: true, user: data.user };
+
+            if (response.ok) {
+                // Set the user and token after successful registration
+                localStorage.setItem('accessToken', data.accessToken);
+                setToken(data.accessToken);
+                setUser(data.user);
+                
+                return {
+                    success: true,
+                    user: data.user,
+                    message: data.message
+                };
+            } else {
+                throw new Error(data.message || 'Registration completion failed');
+            }
         } catch (error) {
-            console.error('Registration error:', error);
-            return { success: false, error: error.message };
+            console.error('Registration completion error:', error);
+            throw error;
         } finally {
             setLoading(false);
         }
     };
 
-    const login = async (identifier, password, captchaToken) => {
+    const login = async (identifier, password, captchaToken, requiresCaptcha = false) => {
         try {
-            const response = await fetch("/api/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identifier, password, captchaToken }), // <-- include captchaToken
-                credentials: "include",
-            });
+            const requestBody = { identifier, password };
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Login failed");
+            //Include reCaptcha if required
+            if (requiresCaptcha && captchaToken) {
+                requestBody.captchaToken = captchaToken;
             }
 
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody),
+            });
+
             const data = await response.json();
+
+            if (!response.ok) {
+                if (data.requiresCaptcha) {
+                    throw new Error(data.message || "Please complete the captcha verification");
+                }
+                throw new Error(data.message || "Login failed");
+            }
+
             localStorage.setItem('accessToken', data.accessToken);
             setToken(data.accessToken);
             setUser(data.user);
@@ -146,23 +166,28 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const loginWithGoogle = async (captchaToken) => {
-        const googleClientId = '356425652770-qhulq1q61nqvtrk5anfcce8d6sjio9rl.apps.googleusercontent.com';
-        const redirectUri = "http://localhost:5173/auth/callback";
+    const loginWithGoogle = async () => {
+        const google_client_id = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        const redirectUri = `${import.meta.env.VITE_FRONTEND_URL}/auth/callback`;
         const scope = encodeURIComponent("openid email profile");
         const responseType = "code";
-        const state = "secureRandomState123";
 
-        // Store captchaToken in sessionStorage to use after redirect
-        sessionStorage.setItem('captchaToken', captchaToken);
+        //Generate random state 
+        const state = crypto.randomUUID ? crypto.randomUUID() :
+            ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
 
-        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&state=${state}`;
-        window.location.href = authUrl;
+        sessionStorage.setItem("oauthState", state);
+
+        const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${google_client_id}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=${responseType}&state=${state}`;
+
+        window.location.href = googleAuthUrl;
     };
 
     const logout = async () => {
         try {
-            await fetch(`/api/logout`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });

@@ -1,13 +1,9 @@
-const { hash } = require('bcrypt');
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    first_name: String,
-    last_name: String,
     email: {type: String, unique: true},
-    phone_number: {type: String, unique: true, match: /^(09|03|07|08|05)\d{8}$/},
+    username: {type: String, unique: true},
     hash_password: String,
-    home_address: String,
     createdAt: Date,
     updatedAt: Date,
 });
@@ -24,8 +20,8 @@ module.exports = {
         return User.findById(userId).exec();
     },
 
-    async getUserByNumber(phone_number) {
-        return User.findOne({phone_number}).exec();
+    async getUserByUsername(username) {
+        return User.findOne({username}).exec();
     },
 
     async getUserByEmail(email) {
@@ -45,6 +41,11 @@ module.exports = {
         Object.assign(user, updateData);
         user.updatedAt = new Date();
         await user.save();
-        return user;
+        
+        const userObject = user.toObject();
+        delete userObject.hash_password;
+        delete userObject.__v;
+        
+        return userObject;
     }
 };

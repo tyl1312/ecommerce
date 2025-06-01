@@ -1,16 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 const Register = ({ captchaToken }) => {
     const navigate = useNavigate();
-    const { register } = useAuth();
-    const [first_name, setFirstname] = useState("");
-    const [last_name, setLastname] = useState("");
     const [email, setEmail] = useState("");
-    const [phone_number, setPhone] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [home_address, setAddress] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -19,55 +15,55 @@ const Register = ({ captchaToken }) => {
         setError("");
         setLoading(true);
 
-        if (!first_name || !last_name || !email || !phone_number || !password || !home_address) {
+        if (!email || !username || !password || !confirmPassword) {
             setError("Please fill in all fields.");
             setLoading(false);
             return;
         }
+
+        if (password !== confirmPassword) {
+            setError("Passwords don't match.");
+            setLoading(false);
+            return;
+        }
+
         if (!captchaToken) {
             setError("Please complete the captcha.");
             setLoading(false);
             return;
         }
 
-        const res = await fetch("/api/request-otp", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email }),
-        });
-        setLoading(false);
-        if (res.ok) {
-            sessionStorage.setItem("pendingRegistration", JSON.stringify({
-                email, phone_number, password, first_name, last_name, home_address, captchaToken
-            }));
-            navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
-        } else {
-            setError("Failed to send OTP.");
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/register-pending`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    username,
+                    password,
+                    captchaToken
+                }),
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                sessionStorage.setItem("registrationId", data.registrationId);
+                
+                navigate(`/otp/verify?email=${encodeURIComponent(email)}&purpose=registration`);
+            } else {
+                const data = await res.json();
+                setError(data.message || "Registration failed.");
+            }
+        } catch (err) {
+            console.error('Registration error:', err);
+            setError("Registration failed. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group double">
-                <input
-                    className="first_name_input"
-                    type="text"
-                    name="first_name"
-                    placeholder="First name"
-                    required
-                    value={first_name}
-                    onChange={e => setFirstname(e.target.value)}
-                />
-                <input
-                    className="last_name_input"
-                    type="text"
-                    name="last_name"
-                    placeholder="Last name"
-                    required
-                    value={last_name}
-                    onChange={e => setLastname(e.target.value)}
-                />
-            </div>
             <div className="form-group">
                 <input
                     type="email"
@@ -79,11 +75,11 @@ const Register = ({ captchaToken }) => {
                 />
                 <input
                     type="text"
-                    name="phone"
-                    placeholder="Phone Number"
+                    name="username"
+                    placeholder="Username"
                     required
-                    value={phone_number}
-                    onChange={e => setPhone(e.target.value)}
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
                 />
                 <input
                     type="password"
@@ -94,16 +90,16 @@ const Register = ({ captchaToken }) => {
                     onChange={e => setPassword(e.target.value)}
                 />
                 <input
-                    type="text"
-                    name="home_address"
-                    placeholder="Home Address"
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
                     required
-                    value={home_address}
-                    onChange={e => setAddress(e.target.value)}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
                 />
             </div>
             <button className="submit-btn" type="submit" disabled={loading || !captchaToken}>
-                Create account
+                {loading ? "Sending OTP..." : "Create account"}
             </button>
             {error && <div className="error-message">{error}</div>}
         </form>

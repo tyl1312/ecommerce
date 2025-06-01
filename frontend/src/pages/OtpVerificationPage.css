@@ -78,6 +78,9 @@
   font-weight: 500;
 }
 
+.otp-input-group {
+  width: 32px;
+}
 .message-area {
   min-height: 28px;
   margin-top: 18px;
@@ -95,4 +98,9 @@
   color: #388e3c;
   font-size: 1rem;
   margin: 0;
+}
+
+.resend-btn,
+.link-btn{
+  text-decoration: none;
 }
