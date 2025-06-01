@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.form-input-style {
+  @apply bg-gray-100 dark:bg-slate-900 border-2 border-gray-300 dark:border-slate-700 rounded-xl focus:outline-none focus:border-sky-400 dark:focus:border-sky-400;
+}
+
+.form-container-style {
+  @apply w-full max-w-sm h-fit flex flex-col justify-center items-center bg-white dark:bg-slate-800 px-4 py-8 sm:p-8 rounded-xl shadow-2xl;
+}
+
+.password-input {
+  @apply form-input-style w-full pl-3 pr-12 py-2 overflow-hidden;
+}
+
+
+.sidebar-btn {
+  @apply p-2 xl:px-4 flex justify-center xl:justify-start items-center font-bold hover:bg-gray-200/75 dark:hover:bg-slate-700 border-2 border-transparent rounded-xl;
+}
+
+
+.sidebar-btn-icon {
+  @apply h-7 w-7 xl:h-6 xl:w-6 xl:mr-4;
+}
+
+.sidebar-text {
+  @apply hidden xl:inline-block;
+}
+
+.sidebar-btn.active {
+  @apply bg-green-100 border-2 border-green-300 text-green-500 dark:bg-transparent dark:text-red-400 dark:border-red-400 dark:bg-slate-700;
+}
+
+.box-container-style {
+  @apply bg-white w-full h-full p-4 rounded-xl shadow-lg;
+}
+
+.ranking-first-style {
+  @apply border-2 border-amber-400 bg-amber-200 text-amber-600;
+}
+
+.ranking-second-style {
+  @apply border-2   border-slate-400 bg-slate-200 text-slate-400;
+}
+
+.ranking-third-style {
+  @apply border-2 border-[#D7975D] bg-[#F7BE8B] text-[#CD7900];
+}
+
+.ranking-index-style {
+  @apply h-8 w-8 p-2 flex justify-center items-center rounded-full font-bold;
+}
+
+
+html {
+  font-family: 'Nunito Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.hero-bg {
+  background-image: url('./assets/waves.svg');
+  background-size: 105%, 80px;
+  background-position: bottom, top left;
+  background-repeat: no-repeat, repeat;
+}
+
+.text-shadow {
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+}
+
+.custom-button {
+  border-radius: 8px; 
+}
+
+.fixed-size-image {
+  width: 300px; /* You can adjust the width and height as needed */
+  height: 200px;
+  object-fit: cover;
+}
+
+.opacity-transition {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.opacity-transition.visible {
+  opacity: 1;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-shake {
+  animation: shake 0.5s;
+  animation-fill-mode: forwards;
+}

@@ -1,0 +1,17 @@
+{
+  "name": "learning-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "install": "cd backend && npm i && cd ../frontend && npm i",
+    "dev": "concurrently \"cd backend && npm run start\" \"cd frontend && npm run start\"",
+    "build":"cd frontend && npm run build"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}
