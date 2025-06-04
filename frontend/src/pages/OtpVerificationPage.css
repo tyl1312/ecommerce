@@ -1,0 +1,106 @@
+.otp-verification-form {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+}
+
+.otp-verification-form h2 {
+  margin-bottom: 24px;
+  color: #2d3a5a;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.otp-verification-form form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  padding: 32px 28px 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+  min-width: 320px;
+}
+
+.otp-verification-form input[type="text"] {
+  font-size: 1.5rem;
+  padding: 10px 16px;
+  margin-bottom: 18px;
+  border: 1.5px solid #bfc9d9;
+  border-radius: 8px;
+  outline: none;
+  width: 180px;
+  text-align: center;
+  transition: border 0.2s;
+}
+
+.otp-verification-form input[type="text"]:focus {
+  border: 2px solid #4f8cff;
+}
+
+.otp-verification-form button[type="submit"] {
+  background: #4f8cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: background 0.2s;
+}
+
+.otp-verification-form button[type="submit"]:hover:not([disabled]) {
+  background: #356ae6;
+}
+
+.otp-verification-form button[disabled] {
+  cursor: not-allowed;
+}
+
+.otp-verification-form .resend-btn {
+  background: transparent;
+  color: #4f8cff;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.otp-verification-form .max-resend {
+  color: #d32f2f;
+  margin-top: 12px;
+  font-weight: 500;
+}
+
+.otp-input-group {
+  width: 32px;
+}
+.message-area {
+  min-height: 28px;
+  margin-top: 18px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.error-message {
+  color: #d32f2f;
+  font-size: 1rem;
+  margin: 0;
+}
+.success-message {
+  color: #388e3c;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.resend-btn,
+.link-btn{
+  text-decoration: none;
+}
