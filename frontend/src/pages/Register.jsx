@@ -34,7 +34,7 @@ const Register = ({ captchaToken }) => {
         }
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/register-pending`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register-pending`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

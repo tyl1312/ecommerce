@@ -32,7 +32,7 @@ const Login = ({ captchaToken, onLoginFailure, onLoginSuccess, requiresCaptcha }
             
             if (result.success) {
                 onLoginSuccess?.();
-                navigate("/");
+                navigate("/dashboard");
             } else {
                 setError(result.message || "Login failed");
                 onLoginFailure?.();

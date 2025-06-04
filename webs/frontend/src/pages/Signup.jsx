@@ -4,7 +4,7 @@ import { FaExclamationCircle } from 'react-icons/fa';
 import { Link, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
-import { checkStatus, setUserRole } from '../redux/actions/userActions';
+import { checkStatus, setUserRole } from '../../../../frontend/src/redux/actions/userActions';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import { AiOutlineLoading } from 'react-icons/ai';
 import ReCAPTCHA from 'react-google-recaptcha';

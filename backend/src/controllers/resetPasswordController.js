@@ -1,53 +1,34 @@
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const Otp = require('../models/Otp');
+import bcrypt from 'bcrypt';
+import { verifyOTP } from '../utils/otpUtils.js';
+import { getUserByEmail, updateUser } from '../models/User.js';
 
 const resetPassword = async (req, res) => {
     try {
-        const { email, password, confirmPassword } = req.body;
+        const { email, password,  } = req.body;
 
-        if (!email || !password || !confirmPassword) {
-            return res.status(400).json({ message: 'All fields are required' });
+        if (!email || !password ) {
+            return res.status(400).json({ 
+                message: 'Email, OTP, and new password are required' 
+            });
         }
 
-        if (password !== confirmPassword) {
-            return res.status(400).json({ message: 'Passwords do not match' });
+        const user = await getUserByEmail(email);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(password)) {
             return res.status(400).json({
-                message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+                message: 'Password must be at least 8 characters long with uppercase, lowercase, number, and special character'
             });
-        }
-
-        const otpRecord = await Otp.findOne({ 
-            email, 
-            purpose: 'reset-password', 
-            verified: true 
-        });
-
-        if (!otpRecord) {
-            return res.status(401).json({ message: 'Please verify your OTP first' });
-        }
-
-        // Find user
-        const user = await User.getUserByEmail(email);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        await User.updateUser(user._id, {
-            hash_password: hashedPassword
-        });
+        await updateUser(user._id, { hash_password: hashedPassword });
 
-        await Otp.deleteOne({ _id: otpRecord._id });
-
-        res.status(200).json({
-            message: 'Password reset successful'
-        });
+        res.status(200).json({ message: 'Password reset successfully' });
 
     } catch (error) {
         console.error('Password reset error:', error);
@@ -55,6 +36,6 @@ const resetPassword = async (req, res) => {
     }
 };
 
-module.exports = {
+export default {
     resetPassword
 };

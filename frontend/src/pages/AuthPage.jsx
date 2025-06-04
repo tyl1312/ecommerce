@@ -72,22 +72,7 @@ const AuthPage = ({ mode }) => {
             <div className="split-right">
                 <div className="form-box">
                     <h2 className="form-title">{isLogin ? "Login to your account" : "Create an account"}</h2>
-                    <div className="toggle-row">
-                        <button
-                            className={`toggle-btn ${isLogin ? "active" : ""}`}
-                            onClick={() => navigate("/login")}
-                            type="button"
-                        >
-                            Login
-                        </button>
-                        <button
-                            className={`toggle-btn ${!isLogin ? "active" : ""}`}
-                            onClick={() => navigate("/register")}
-                            type="button"
-                        >
-                            Register
-                        </button>
-                    </div>
+                    
                     {/*Show reCAPTCHA appears due to failed attempts */}
                     {isLogin && showRecaptcha && failedAttempts >= 3 && (
                         <div className="captcha-warning">

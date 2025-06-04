@@ -3,19 +3,25 @@ import { AiOutlineLoading } from 'react-icons/ai';
 import { Navigate } from "react-router-dom";
 import axios from "axios";
 import escapeHTML from "../util/escapeHTML";
-import { useSelector } from "react-redux";
-
+import { useAuth } from '../context/AuthContext';
 
 const Leaderboards = () => {
     const [data, setData] = useState([]);
     const [fetchLoading, setFetchLoading] = useState(false);
-    const loggedIn = useSelector(state => state.user.loggedIn);
+    const { user, accessToken } = useAuth();
+
+    const loggedIn = !!user;
 
     useEffect(() => {
         const fetchUser = async () => {
             setFetchLoading(true);
             try {
-                const response = await axios.get(import.meta.env.VITE_APP_API_URL + "/user/experience", { withCredentials: true });
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/experience`, { 
+                    withCredentials: true,
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
                 const allUsers = response.data.items;
                 const sortedData = allUsers.sort((a, b) => b.experience - a.experience);
                 
@@ -36,10 +42,10 @@ const Leaderboards = () => {
             }
         };
 
-        fetchUser();
-    }, []);
-
-    // console.log(data);
+        if (user && accessToken) {
+            fetchUser();
+        }
+    }, [user]);
 
     if (!loggedIn) {
         return <Navigate to="/login" />;

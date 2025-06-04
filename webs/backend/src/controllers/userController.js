@@ -4,11 +4,11 @@ import jwt from 'jsonwebtoken';
 import { sendToken } from '../middlewares/auth/sendToken.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { sendMail } from '../helper/sendMail.js';
+import { sendMail } from '../../../../backend/src/helper/sendMail.js';
 import validator from 'validator';
 import { SuccessResponse, Created } from '../core/success.response.js';
 import { BadRequest, NotFound, Unauthorized, Forbidden, InternalServerError } from '../core/error.response.js';
-import { handleErrorResponse } from '../helper/handleErrorResponse.js';
+import { handleErrorResponse } from '../../../../backend/src/helper/handleErrorResponse.js';
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -348,32 +348,6 @@ const userController = {
             return res.status(200).json( updatedUser );
         } catch (error) {
             return handleErrorResponse(error, req, res);
-        }
-    },
-
-    // Method: GET
-    // Path: /user/verify-email/:token
-    verifyEmail: async (req, res) => {
-        try {
-            const token = req.params.token;
-            if (!token) {
-                new BadRequest({ message: 'Invalid or expired token', req });
-                return res.redirect(`${process.env.CLIENT_URL}/verify-email/failed`);
-            }
-            const user = await User.findOne({ verifyToken: token });
-            if (!user) {
-                new NotFound({ message: 'Invalid or expired token', req });
-                return res.redirect(`${process.env.CLIENT_URL}/verify-email/failed`);
-            }
-            user.isVerified = true;
-            user.verifyToken = '';
-            await user.save();
-            res.clearCookie('verificationToken');
-            new SuccessResponse({ message: 'Email verified successfully', req });
-            return res.redirect(`${process.env.CLIENT_URL}/verify-email/success`);
-            
-        } catch (error) {
-            return new InternalServerError({ message: error.message, req }).send(res);
         }
     },
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { HiX } from 'react-icons/hi';
 import { Navigate } from "react-router-dom";
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,15 +11,14 @@ import Button from '../components/Button';
 import { BsArrowClockwise } from 'react-icons/bs';
 import axios from "axios";
 import heart from '../assets/heart.png';
-
+import { useAuth } from '../context/AuthContext';
 
 const QuizPage = () => {
     const [loading, setLoading] = useState(true);
     const [isShaking, setIsShaking] = useState(false);
-    const loggedIn = useSelector(state => state.user.loggedIn);
+    const { user } = useAuth(); // Use AuthContext instead of Redux
     const [listQuestion, setListQuestion] = useState([]);
     const [question, setQuestion] = useState('');
-    const quizId = useSelector(state => state.user.quizId);
     const [quizComplete, setQuizComplete] = useState(false);
     const [progress, setProgress] = useState(0);
     const [numberOfQuestions, setNumberOfQuestions] = useState(0);
@@ -35,11 +33,18 @@ const QuizPage = () => {
     const [endTime, setEndTime] = useState(null);
     const requiredXp = 8;
 
-    
+    const loggedIn = !!user;
+
+    // Get quiz data from localStorage (set in Dashboard)
+    const currentQuiz = JSON.parse(localStorage.getItem('currentQuiz') || '{}');
+    const quizId = currentQuiz.quizId;
+
     useEffect(() => {
         const fetchQuiz = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_APP_API_URL}/quiz/questions/${quizId}`, { withCredentials: true });
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/quiz/questions/${quizId}`, { 
+                    withCredentials: true 
+                });
                 if (response.status === 200) {
                     const questions = response.data.question;
                     setLoading(false);
@@ -53,7 +58,9 @@ const QuizPage = () => {
             }
         };
 
-        fetchQuiz();
+        if (quizId) {
+            fetchQuiz();
+        }
     }, [quizId]);
 
     useEffect(() => {
@@ -77,7 +84,7 @@ const QuizPage = () => {
 
         return () => clearTimeout(timer);
 
-      }, [remainingLives]);
+    }, [remainingLives]);
 
     const randomQuestion = (questions) => {
         if (questions.length === 0) return;
@@ -93,7 +100,7 @@ const QuizPage = () => {
 
         // Prepare choices
         let choices = [];
-        if (selectedQuestion.incorrectOptions.length > 0) {
+        if (selectedQuestion.incorrectOptions && selectedQuestion.incorrectOptions.length > 0) {
             choices = [...selectedQuestion.incorrectOptions, selectedQuestion.correctOption];
             // Shuffle the choice
             for (let i = choices.length - 1; i > 0; i--) {
@@ -107,7 +114,6 @@ const QuizPage = () => {
 
         setSelectedOption('');
         setTypedAnswer('');
-
     };
 
     const handleNextQuestion = () => {
@@ -118,7 +124,6 @@ const QuizPage = () => {
             randomQuestion(listQuestion);
         }
     };
-
 
     const checkAnswer = async (selectedAnswer) => {
         const normalizedAnswer = selectedAnswer.toLowerCase().trim();
@@ -143,11 +148,9 @@ const QuizPage = () => {
 
             // Check if the quiz is complete
             if (newQuestionDone === numberOfQuestions) {
-                // setQuizComplete(true);
                 setEndTime(Date.now());
             }
 
-            // Log the values for debugging
             console.log("Question Done:", newQuestionDone);
             console.log("Progress:", newProgress);
             console.log('Remaining Lives:', remainingLives)
@@ -170,37 +173,27 @@ const QuizPage = () => {
         try {
             const xp = correctQuestions * 10 / numberOfQuestions;
             if (xp >= requiredXp) {
-                const response = await axios.put(`${import.meta.env.VITE_APP_API_URL}/progress/update`,
+                const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/progress/update`,
                     {
                         score: xp,
                         quizId: quizId
                     },
                     {
-                        withCredentials: true,
-                        headers: {
-                            'X-CSRF-Token': localStorage.getItem('csrfToken')
-                        }
+                        withCredentials: true
                     }
                 );
 
                 if (response.status === 200) {
-                    localStorage.setItem('csrfToken', response.headers['x-csrf-token'])
+                    console.log("Experience updated successfully");
                 }
             } else {
                 console.log("Your score is not high enough to update experience");
             }
         } catch (error) {
-            const csrfToken = error.response.headers['x-csrf-token'];
-            localStorage.setItem('csrfToken', csrfToken);
             console.error("Error updating experience:", error);
         }
 
         window.history.back();
-    }
-
-
-    if (!loggedIn) {
-        return <Navigate to="/login" />;
     }
 
     if (loading) {
@@ -275,14 +268,14 @@ const QuizPage = () => {
                                                 </button>
                                             ))
                                         ) : (
-                                                <input
-                                                    type="text"
-                                                    value={typedAnswer}
-                                                    onChange={(e) => setTypedAnswer(e.target.value)}
-                                                    placeholder="Type your answer here"
-                                                    className="w-full h-full p-2 md:py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700"
-                                                    disabled={questionState}
-                                                />
+                                            <input
+                                                type="text"
+                                                value={typedAnswer}
+                                                onChange={(e) => setTypedAnswer(e.target.value)}
+                                                placeholder="Type your answer here"
+                                                className="w-full h-full p-2 md:py-3 rounded-xl border-2 border-gray-300 dark:border-gray-700"
+                                                disabled={questionState}
+                                            />
                                         )}
                                     </div>
                                 </div>

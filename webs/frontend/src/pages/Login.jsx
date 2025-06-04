@@ -6,7 +6,7 @@ import { AiOutlineLoading } from 'react-icons/ai';
 import { FaExclamationCircle } from 'react-icons/fa';
 import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
-import { checkStatus, setUserRole } from '../redux/actions/userActions';
+import { checkStatus, setUserRole } from '../../../../frontend/src/redux/actions/userActions';
 import { jwtDecode } from "jwt-decode";
 import DOMPurify from 'dompurify';
 import ReCAPTCHA from "react-google-recaptcha";
@@ -233,7 +233,7 @@ const Login = () => {
                 <p className="mt-4 text-gray-500 dark:text-gray-400 text-center">
                     Don't have an account?{' '}
                     <Link
-                        to="/signup"
+                        to="/register"
                         className="font-bold text-primary hover:text-primary-shade hover:underline"
                     >
                         Sign up

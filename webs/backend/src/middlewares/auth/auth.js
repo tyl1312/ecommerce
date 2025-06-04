@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../../models/User.js';
 import { NotFound, InternalServerError, Unauthorized } from '../../core/error.response.js';
 import * as dotenv from 'dotenv';
-import { handleErrorResponse } from '../../helper/handleErrorResponse.js';
+import { handleErrorResponse } from '../../../../../backend/src/helper/handleErrorResponse.js';
 
 dotenv.config();
 

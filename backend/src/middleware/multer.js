@@ -1,6 +1,6 @@
 import multer from "multer";
 import path from "path";
-import { Forbidden } from "../../core/error.response.js";
+import { Forbidden } from "../core/error.response.js";
 
 const storage = multer.memoryStorage();
 

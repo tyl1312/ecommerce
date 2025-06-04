@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import { useSelector } from 'react-redux';
+import { useAuth } from '../context/AuthContext';
 
 const Dictionary = () => {
-    const loggedIn = useSelector(state => state.user.loggedIn);
+    const { user } = useAuth(); // Use AuthContext instead of Redux
+    const loggedIn = !!user;
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [meanings, setMeanings] = useState({});
     const [pronunciation, setPronunciation] = useState([]);
@@ -26,7 +28,7 @@ const Dictionary = () => {
             setSubmitValue(searchTerm.toLowerCase());
             try {
                 const response = await axios.get(
-                    import.meta.env.VITE_APP_API_DICTIONARY+ `/${searchTerm}`
+                    `${import.meta.env.VITE_API_DICTIONARY}/${searchTerm}`
                 );
                 const data = response.data;
                 setWord(data[0].word);

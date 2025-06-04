@@ -1,6 +1,5 @@
-const { generateOTP, sendOTP, storeOTP, verifyOTP } = require('../utils/otpUtils');
-const User = require('../models/User');
-const { generateAccessToken, generateRefreshToken } = require('./authController');
+import { generateOTP, sendOTP, storeOTP, verifyOTP } from '../utils/otpUtils.js';
+import User, { getUserByEmail } from '../models/User.js';
 
 const requestOTP = async (req, res) => {
     try {
@@ -10,7 +9,7 @@ const requestOTP = async (req, res) => {
             return res.status(400).json({ message: 'Email is required' });
         }
 
-        const user = await User.getUserByEmail(email);
+        const user = await getUserByEmail(email);
 
         if (purpose === 'reset-password' && !user) {
             return res.status(404).json({ message: 'User not found' });
@@ -55,7 +54,7 @@ const verifyOtp = async (req, res) => {
         }
 
         if (purpose === 'reset-password') {
-            const user = await User.getUserByEmail(email);
+            const user = await getUserByEmail(email);
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
@@ -74,7 +73,11 @@ const verifyOtp = async (req, res) => {
     }
 };
 
-module.exports = {
+// Export individual functions
+export { requestOTP, verifyOtp };
+
+// Default export
+export default {
     requestOTP,
     verifyOtp
 };

@@ -59,7 +59,7 @@ const OtpVerificationPage = () => {
 
         try {
             if (isPasswordReset) {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/otp/verify`, {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/otp/verify`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -93,7 +93,7 @@ const OtpVerificationPage = () => {
                 if (result.success) {
                     sessionStorage.removeItem("registrationId");
                     setMessage("Registration successful! Redirecting...");
-                    setTimeout(() => navigate("/"), 2000);
+                    setTimeout(() => navigate("/dashboard"), 2000);
                 } else {
                     setError(result.message || "Registration failed.");
                 }
@@ -111,7 +111,7 @@ const OtpVerificationPage = () => {
             setResendLoading(true);
             setError("");
             
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/otp/request`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/otp/request`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

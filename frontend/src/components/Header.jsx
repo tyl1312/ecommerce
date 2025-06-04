@@ -18,7 +18,7 @@ const Header = () => {
                 </Link>
 
                 <div>
-                    <Link to="/signup">
+                    <Link to="/register">
                         <Button color="success" sx={{ 'margin': '5px', 'border-radius': '8px' }}>
                             Sign Up
                         </Button>

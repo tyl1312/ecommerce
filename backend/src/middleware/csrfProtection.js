@@ -1,7 +1,7 @@
 import Tokens from 'csrf';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
-import { Forbidden } from '../../core/error.response.js';
+import { Forbidden } from '../core/error.response.js';
 dotenv.config();
 
 const tokens = new Tokens();

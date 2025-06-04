@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import { Unauthorized } from '../core/error.response.js';
 
-const authenticateToken = async (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
@@ -18,4 +19,11 @@ const authenticateToken = async (req, res, next) => {
     });
 };
 
-module.exports = authenticateToken;
+export const isAdmin = async (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return new Unauthorized({ message: 'You are not authorized', req }).send(res);
+    } 
+    next();
+}
+
+export default { authenticateToken, isAdmin };

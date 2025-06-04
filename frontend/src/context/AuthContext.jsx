@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
                 return;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/user`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
                 const userData = await response.json();
                 setUser(userData);
             } else if (response.status === 403) {
-                const refresh = await fetch(`${import.meta.env.VITE_API_URL}/api/refresh`, {
+                const refresh = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/refresh`, {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
                     setToken(newToken);
 
                     //Retry with new token
-                    const retryAuth = await fetch(`${import.meta.env.VITE_API_URL}/api/user`, {
+                    const retryAuth = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/user`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
     const register = async (registrationId, otp) => {
         try {
             setLoading(true);
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ export const AuthProvider = ({ children }) => {
                 requestBody.captchaToken = captchaToken;
             }
 
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody),
@@ -187,7 +187,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/logout`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });

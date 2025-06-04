@@ -4,8 +4,8 @@ import { CircularProgress } from '@mui/material';
 import { FaExclamationCircle } from 'react-icons/fa';
 import useUserStatus from '../hooks/useUserStatus';
 import axios from 'axios';
-import dateFormat from '../util/dateFormat';
-import escapeHTML from '../util/escapeHTML';
+import dateFormat from '../../../../frontend/src/util/dateFormat';
+import escapeHTML from '../../../../frontend/src/util/escapeHTML';
 import { useSelector } from 'react-redux';
 
 const Profile = () => {

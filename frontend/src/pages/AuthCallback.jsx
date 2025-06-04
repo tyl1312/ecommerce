@@ -19,7 +19,7 @@ const AuthCallback = () => {
             }
 
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/google`, {
+                const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/google`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ code }),
@@ -32,7 +32,7 @@ const AuthCallback = () => {
                     setToken(data.accessToken);
                     setUser(data.user);
                     sessionStorage.removeItem("oauthState");
-                    navigate("/");
+                    navigate("/dashboard");
                 } else {
                     navigate("/login");
                 }

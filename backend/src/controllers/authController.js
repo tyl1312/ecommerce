@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const { generateOTP, sendOTP, storeOTP, verifyOTP } = require('../utils/otpUtils');
-const crypto = require('crypto');
+import jwt from 'jsonwebtoken';
+import axios from 'axios';
+import bcrypt from 'bcrypt';
+import User, { getUserByEmail, getUserByUsername, createUser, updateUser, getUserById } from '../models/User.js';
+import { generateOTP, sendOTP, storeOTP, verifyOTP } from '../utils/otpUtils.js';
+import crypto from 'crypto';
 
 const failedLoginAttempts = new Map();
 const pendingRegistrations = new Map();
@@ -14,8 +14,8 @@ const generateRegistrationId = () => {
 
 const cleanupExpiredRegistrations = () => {
     const now = Date.now();
-    const fifteenMinutes = 15 * 60 * 1000; 
-    
+    const fifteenMinutes = 15 * 60 * 1000;
+
     for (const [id, data] of pendingRegistrations.entries()) {
         if (now - data.timestamp > fifteenMinutes) {
             pendingRegistrations.delete(id);
@@ -127,12 +127,12 @@ const registerPending = async (req, res) => {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        const existingUserByEmail = await User.getUserByEmail(email);
+        const existingUserByEmail = await getUserByEmail(email);
         if (existingUserByEmail) {
             return res.status(400).json({ message: 'Email already exists' });
         }
 
-        const existingUserByUsername = await User.getUserByUsername(username);
+        const existingUserByUsername = await getUserByUsername(username);
         if (existingUserByUsername) {
             return res.status(400).json({ message: 'Username already exists' });
         }
@@ -190,11 +190,12 @@ const register = async (req, res) => {
             return res.status(400).json({ message: otpResult.message });
         }
 
-        const user = await User.createUser({
+        const user = await createUser({
             email: pendingData.email,
             username: pendingData.username,
+            firstName: '',
+            lastName: '',
             hash_password: pendingData.hashedPassword,
-            isActive: true,
             createdAt: new Date(),
             updatedAt: new Date(),
         });
@@ -259,9 +260,9 @@ const login = async (req, res) => {
 
         let user = null;
         if (identifier.includes('@')) {
-            user = await User.getUserByEmail(identifier);
+            user = await getUserByEmail(identifier);
         } else {
-            user = await User.getUserByUsername(identifier);
+            user = await getUserByUsername(identifier);
         }
 
         const genericError = "Invalid credentials";
@@ -338,18 +339,21 @@ const loginWithGoogle = async (req, res) => {
         const googleUser = userInfoResponse.data;
 
         if (!googleUser.email) {
-            return res.status(400).json({ message: "Google account email not verified" }); 
+            return res.status(400).json({ message: "Google account email not verified" });
         }
 
-        let user = await User.getUserByEmail(googleUser.email);
+        let user = await getUserByEmail(googleUser.email);
         if (!user) {
             //Create username from email
             const username = googleUser.email.split('@')[0];
 
-            user = await User.createUser({
+            user = await createUser({
                 email: googleUser.email,
                 username: username,
+                firstName: googleUser.given_name || '',
+                lastName: googleUser.family_name || '',
                 hash_password: null,
+                isGoogleUser: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
@@ -375,7 +379,7 @@ const loginWithGoogle = async (req, res) => {
 
     } catch (error) {
         console.error("Google login failed:", error.response?.data || error.message);
-        res.status(500).json({ message: "Google authentication failed" }); 
+        res.status(500).json({ message: "Google authentication failed" });
     }
 };
 
@@ -394,22 +398,85 @@ const logout = (req, res) => {
 //Update user profile with validation
 const updateProfile = async (req, res) => {
     try {
-        const { username } = req.body;
-        const user = await User.updateUser(req.user.id, {
-            username,
-        });
+        const { username, firstName, lastName, password } = req.body;
+        const userId = req.user.id;
 
-        if (!user) {
+        const currentUser = await getUserById(userId);
+        if (!currentUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const userObj = user.toObject ? user.toObject() : user;
+        if (password) {
+            const isPasswordValid = await bcrypt.compare(password, currentUser.hash_password);
+            if (!isPasswordValid) {
+                return res.status(400).json({ message: "Current password is incorrect" });
+            }
+        }
+
+        if (username && username !== currentUser.username) {
+            const existingUser = await getUserByUsername(username);
+            if (existingUser && existingUser._id.toString() !== userId) {
+                return res.status(400).json({ message: "Username already exists" });
+            }
+        }
+
+        const updateData = {};
+        if (username) updateData.username = username;
+        if (firstName !== undefined) updateData.firstName = firstName;
+        if (lastName !== undefined) updateData.lastName = lastName;
+
+        const updatedUser = await updateUser(userId, updateData);
+
+        const userObj = updatedUser.toObject ? updatedUser.toObject() : updatedUser;
         const { hash_password, ...userWithoutPassword } = userObj;
 
-        res.json({ user: userWithoutPassword });
+        res.json(userWithoutPassword);
     } catch (error) {
         console.error("Update profile error:", error);
         res.status(500).json({ message: "Profile update failed" });
+    }
+};
+
+//Change password
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        if (!oldPassword || !newPassword) {
+            return res.status(400).json({ message: 'Old password and new password are required' });
+        }
+
+        // Get current user
+        const currentUser = await getUserById(userId);
+        if (!currentUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Verify old password
+        const isOldPasswordValid = await bcrypt.compare(oldPassword, currentUser.hash_password);
+        if (!isOldPasswordValid) {
+            return res.status(400).json({ message: "Current password is incorrect" });
+        }
+
+        // Validate new password
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                message: 'Password must be at least 8 characters long, contain at least one uppercase letter, one lowercase letter, one number and one special character',
+            });
+        }
+
+        // Hash new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        await updateUser(userId, { hash_password: hashedNewPassword });
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error("Change password error:", error);
+        res.status(500).json({ message: "Password change failed" });
     }
 };
 
@@ -419,7 +486,7 @@ const getCurrentUser = async (req, res) => {
     }
 
     try {
-        const user = await User.getUserById(req.user.id);
+        const user = await getUserById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -433,8 +500,27 @@ const getCurrentUser = async (req, res) => {
     }
 };
 
-module.exports = {
-    registerPending, 
+const getExperience = async (req, res) => {
+    try {
+        const users = await User.find().select('username experience role -_id');
+        if (!users || users.length === 0) {
+            throw new NotFound({ message: 'No users found', req }, 'info');
+        }
+
+        const filterUsers = users.filter(user => user.role !== 'admin');
+        const total = filterUsers.length;
+        const items = filterUsers.map(user => {
+            return { username: user.username, experience: user.experience };
+        });
+
+        return res.status(200).json({ items, total });
+    } catch (error) {
+        return handleErrorResponse(error, req, res);
+    }
+}
+
+export default {
+    registerPending,
     register,
     login,
     loginWithGoogle,
@@ -442,6 +528,6 @@ module.exports = {
     refresh,
     getCurrentUser,
     updateProfile,
-    generateAccessToken,
-    generateRefreshToken
+    changePassword,
+    getExperience
 };

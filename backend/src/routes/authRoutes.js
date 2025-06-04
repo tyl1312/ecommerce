@@ -1,38 +1,40 @@
-const express = require('express');
-const authController = require('../controllers/authController');
-const authMiddleware = require('../middleware/authMiddleware');
-const otpController = require('../controllers/otpController');
-const resetPasswordController = require('../controllers/resetPasswordController');
+import express from 'express';
+import authController from '../controllers/authController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js'; 
+import otpController from '../controllers/otpController.js';
+import resetPasswordController from '../controllers/resetPasswordController.js';
 
-const { 
+import { 
     loginLimiter, 
     registrationLimiter, 
     otpRequestLimiter, 
     otpVerificationLimiter, 
     passwordResetLimiter 
-} = require('../middleware/rateLimiter');
+} from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
-//Authentication routes
+// Authentication routes
 router.post('/register-pending', registrationLimiter, authController.registerPending);
 router.post('/register', otpVerificationLimiter, authController.register);
 router.post('/login', loginLimiter, authController.login);
 
-//Reset password routes
+// Reset password routes
 router.post('/reset-password', passwordResetLimiter, resetPasswordController.resetPassword);
 
-//Google OAuth route
+// Google OAuth route
 router.post('/google', authController.loginWithGoogle);
 
-//OTP routes
+// OTP routes
 router.post('/otp/request', otpRequestLimiter, otpController.requestOTP);
 router.post('/otp/verify', otpVerificationLimiter, otpController.verifyOtp);
 
-//Other routes
+// User management routes
 router.post('/logout', authController.logout);
-router.get('/user', authMiddleware, authController.getCurrentUser);
-router.put('/profile', authMiddleware, authController.updateProfile);
+router.get('/user', authenticateToken, authController.getCurrentUser); 
+router.put('/profile', authenticateToken, authController.updateProfile); 
+router.put('/change-password', authenticateToken, authController.changePassword); 
 router.post('/refresh', authController.refresh);
+router.get('/experience', authenticateToken, authController.getExperience);
 
-module.exports = router;
+export default router;

@@ -5,7 +5,7 @@ import { FaExclamationCircle } from 'react-icons/fa';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { checkStatus } from '../redux/actions/userActions';
+import { checkStatus } from '../../../../frontend/src/redux/actions/userActions';
 import DOMPurify from 'dompurify';
 import Swal from 'sweetalert2';
 

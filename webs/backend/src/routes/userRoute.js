@@ -12,9 +12,6 @@ router.post('/register', registerRateLimiter, csrfMiddleware, userController.reg
 // LOGIN USER
 router.post('/login', loginRateLimiter, csrfMiddleware, userController.login);
 
-// VERIFY EMAIL
-router.get('/verify-email/:token', userController.verifyEmail);
-
 // RESEND EMAIL
 router.post('/resend-email', verifyJWT, userController.resendEmail);
 

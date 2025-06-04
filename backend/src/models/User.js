@@ -1,51 +1,88 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema({
-    email: {type: String, unique: true},
-    username: {type: String, unique: true},
-    hash_password: String,
-    createdAt: Date,
-    updatedAt: Date,
+const { Schema, model } = mongoose;
+
+const userSchema = new Schema({
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true
+    },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    firstName: {
+        type: String,
+        trim: true
+    },
+    lastName: {
+        type: String,
+        trim: true
+    },
+    hash_password: {
+        type: String,
+        required: function() {
+            // Password is required only for non-Google users
+            return !this.isGoogleUser;
+        }
+    },
+    role: {
+        type: String,
+        default: 'user',
+        enum: ['user', 'admin'],
+    },
+    experience: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    isGoogleUser: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    timestamps: true, 
 });
 
-const User = mongoose.model('User', userSchema);
+// Static methods
+const User = model('User', userSchema);
 
-userSchema.statics.findById = function (id) {
-    return this.where({id: new RegExp(id, 'i')});
-}
-module.exports = {
-    User,
-
-    async getUserById(userId) {
-        return User.findById(userId).exec();
-    },
-
-    async getUserByUsername(username) {
-        return User.findOne({username}).exec();
-    },
-
-    async getUserByEmail(email) {
-        return User.findOne({email}).exec();
-    },
-
-    async createUser(userData) {
-        const user = await User.create(userData);
-        return user;
-    },
-
-    async updateUser(userId, updateData) {
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-        Object.assign(user, updateData);
-        user.updatedAt = new Date();
-        await user.save();
-        
-        const userObject = user.toObject();
-        delete userObject.hash_password;
-        delete userObject.__v;
-        
-        return userObject;
-    }
+// Export individual functions for backwards compatibility
+export const getUserById = async (userId) => {
+    return User.findById(userId).exec();
 };
+
+export const getUserByUsername = async (username) => {
+    return User.findOne({ username }).exec();
+};
+
+export const getUserByEmail = async (email) => {
+    return User.findOne({ email: email.toLowerCase() }).exec();
+};
+
+export const createUser = async (userData) => {
+    const user = await User.create({
+        ...userData,
+        email: userData.email?.toLowerCase()
+    });
+    return user;
+};
+
+export const updateUser = async (userId, updateData) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+    
+    Object.assign(user, updateData);
+    await user.save();
+    
+    return user;
+};
+
+export default User;

@@ -1,6 +1,6 @@
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 
-const loginLimiter = rateLimit({
+export const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
     max: 5, 
     message: {
@@ -18,8 +18,8 @@ const loginLimiter = rateLimit({
     }
 });
 
-//Rate limit for registration
-const registrationLimiter = rateLimit({
+// Rate limit for registration
+export const registrationLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 3, 
     message: {
@@ -35,8 +35,8 @@ const registrationLimiter = rateLimit({
     }
 });
 
-//Rate limit for OTP requests
-const otpRequestLimiter = rateLimit({
+// Rate limit for OTP requests
+export const otpRequestLimiter = rateLimit({
     windowMs: 45 * 1000, 
     max: 1, 
     keyGenerator: (req) => {
@@ -56,8 +56,8 @@ const otpRequestLimiter = rateLimit({
     }
 });
 
-//Rate limit for OTP verification
-const otpVerificationLimiter = rateLimit({
+// Rate limit for OTP verification
+export const otpVerificationLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 5, 
     keyGenerator: (req) => {
@@ -78,8 +78,8 @@ const otpVerificationLimiter = rateLimit({
     }
 });
 
-//Rate limiting for password reset requests
-const passwordResetLimiter = rateLimit({
+// Rate limiting for password reset requests
+export const passwordResetLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, 
     max: 3,
     keyGenerator: (req) => {
@@ -99,7 +99,8 @@ const passwordResetLimiter = rateLimit({
     }
 });
 
-module.exports = {
+// Default export for backwards compatibility
+export default {
     loginLimiter,
     registrationLimiter,
     otpRequestLimiter,

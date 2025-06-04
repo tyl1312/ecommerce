@@ -33,7 +33,7 @@ body {
 .form-box {
     width: 400px;
     min-height: 520px; 
-    padding: 40px 0;
+    padding: 70px 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -94,11 +94,6 @@ body {
 
 .form-group input:not(:last-child) {
     margin-bottom: 12px;
-}
-
-.form-group.double {
-    flex-direction: row;
-    gap: 12px;
 }
 
 .form-group input {
