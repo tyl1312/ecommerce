@@ -5,7 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { useAuth } from '../context/AuthContext';
 
 const Dictionary = () => {
-    const { user } = useAuth(); // Use AuthContext instead of Redux
+    const { user } = useAuth(); 
     const loggedIn = !!user;
     
     const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +14,7 @@ const Dictionary = () => {
     const [word, setWord] = useState('');
     const [error, setError] = useState(false);
     const [audio, setAudio] = useState('');
-    const [submitValue, setSubmitValue] = useState(''); // State for displaying the search term
+    const [submitValue, setSubmitValue] = useState(''); 
 
     const handleInputChange = (e) => {
         const value = e.target.value;
@@ -31,37 +31,50 @@ const Dictionary = () => {
                     `${import.meta.env.VITE_API_DICTIONARY}/${searchTerm}`
                 );
                 const data = response.data;
+                
+                // Fix: Add safety checks for data
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    throw new Error('No data found');
+                }
+                
                 setWord(data[0].word);
                 const meaningsByPartOfSpeech = {};
                 const pronunciationSet = new Set();
                 const audioSet = new Set();
 
                 for (let i = 0; i < data.length; i++) {
-                    for (let j = 0; j < data[i].meanings.length; j++) {
-                        const partOfSpeech = data[i].meanings[j].partOfSpeech;
-                        const definitions = data[i].meanings[j].definitions;
-                        // Checks if partOfSpeech already exists in the object
-                        if (meaningsByPartOfSpeech.hasOwnProperty(partOfSpeech)) {
-                            meaningsByPartOfSpeech[partOfSpeech].definitions.push(...definitions);
-                        } else {
-                            meaningsByPartOfSpeech[partOfSpeech] = {
-                                partOfSpeech: partOfSpeech,
-                                definitions: [...definitions],
-                            };
+                    // Add safety check for meanings array
+                    if (data[i].meanings && Array.isArray(data[i].meanings)) {
+                        for (let j = 0; j < data[i].meanings.length; j++) {
+                            const partOfSpeech = data[i].meanings[j].partOfSpeech;
+                            const definitions = data[i].meanings[j].definitions;
+                            
+                            // Checks if partOfSpeech already exists in the object
+                            if (meaningsByPartOfSpeech.hasOwnProperty(partOfSpeech)) {
+                                meaningsByPartOfSpeech[partOfSpeech].definitions.push(...definitions);
+                            } else {
+                                meaningsByPartOfSpeech[partOfSpeech] = {
+                                    partOfSpeech: partOfSpeech,
+                                    definitions: [...definitions],
+                                };
+                            }
                         }
                     }
 
-                    data[i].phonetics.forEach((phonetic) => {
-                        if (phonetic.text) {
-                            pronunciationSet.add(phonetic.text);
-                        }
-                        if (phonetic.audio) {
-                            audioSet.add(phonetic.audio);
-                        }
-                    });
+                    // Add safety check for phonetics array
+                    if (data[i].phonetics && Array.isArray(data[i].phonetics)) {
+                        data[i].phonetics.forEach((phonetic) => {
+                            if (phonetic.text) {
+                                pronunciationSet.add(phonetic.text);
+                            }
+                            if (phonetic.audio) {
+                                audioSet.add(phonetic.audio);
+                            }
+                        });
+                    }
                 }
 
-                // Chuyển đổi đối tượng meaningsByPartOfSpeech thành mảng newMeanings
+                // Convert meaningsByPartOfSpeech object to newMeanings array
                 const newMeanings = Object.values(meaningsByPartOfSpeech);
                 
                 setMeanings(newMeanings);
@@ -70,9 +83,11 @@ const Dictionary = () => {
                 setError(false);
             } catch (error) {
                 setWord('');
-                setMeanings({});
+                setMeanings([]); // Set to empty array instead of object
+                setPronunciation([]);
+                setAudio([]);
                 setError(true);
-                console.error(error);
+                console.error('Dictionary API error:', error);
             } finally {
                 setSearchTerm('');
             }

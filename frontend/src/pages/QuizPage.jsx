@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 const QuizPage = () => {
     const [loading, setLoading] = useState(true);
     const [isShaking, setIsShaking] = useState(false);
-    const { user } = useAuth(); // Use AuthContext instead of Redux
+    const { user } = useAuth();
     const [listQuestion, setListQuestion] = useState([]);
     const [question, setQuestion] = useState('');
     const [quizComplete, setQuizComplete] = useState(false);
@@ -37,12 +37,20 @@ const QuizPage = () => {
 
     // Get quiz data from localStorage (set in Dashboard)
     const currentQuiz = JSON.parse(localStorage.getItem('currentQuiz') || '{}');
-    const quizId = currentQuiz.quizId;
+    const quizId = currentQuiz.quizId?._id || currentQuiz.quizId;
 
     useEffect(() => {
         const fetchQuiz = async () => {
+            if (!quizId || typeof quizId !== 'string') {
+                console.error('Invalid quizId:', quizId);
+                return;
+            }
+
             try {
                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/quiz/questions/${quizId}`, { 
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    },
                     withCredentials: true 
                 });
                 if (response.status === 200) {
@@ -58,9 +66,7 @@ const QuizPage = () => {
             }
         };
 
-        if (quizId) {
-            fetchQuiz();
-        }
+        fetchQuiz();
     }, [quizId]);
 
     useEffect(() => {
@@ -176,9 +182,12 @@ const QuizPage = () => {
                 const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/progress/update`,
                     {
                         score: xp,
-                        quizId: quizId
+                        quizId: quizId 
                     },
                     {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                        },
                         withCredentials: true
                     }
                 );

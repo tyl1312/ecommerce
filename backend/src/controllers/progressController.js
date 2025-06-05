@@ -4,15 +4,23 @@ import { handleErrorResponse } from '../helper/handleErrorResponse.js';
 import { BadRequest, NotFound } from '../core/error.response.js';
 
 const progressController = {
-
     // Method: GET
     // Path: /progress/
     getProgress: async (req, res) => {
         try {
-            const progress = await Progress.findOne({ user: req.user._id }).populate('user', 'username');
+            let progress = await Progress.findOne({ user: req.user._id }).populate('user', 'username');
+            
+            // Create progress if it doesn't exist
             if (!progress) {
-                throw new NotFound({ message: 'Progress not found', req }, 'info');
+                progress = new Progress({
+                    user: req.user._id,
+                    completedQuizzes: [],
+                    totalScore: 0,
+                    totalCompletedQuizzes: 0
+                });
+                await progress.save();
             }
+            
             new SuccessResponse({ progress, req });
             return res.status(200).json(progress);
         } catch (error) {
@@ -24,12 +32,33 @@ const progressController = {
     // Path: /progress/update
     updateProgress: async (req, res) => {
         try {
-            const userId = req.user._id;
+            const userId = req.user?.id || req.user?._id;
             const { quizId, score } = req.body;
 
-            const progress = await Progress.findOne({ user: userId });
+            console.log('Update progress request:', { 
+                userId, 
+                quizId, 
+                score,
+                fullUser: req.user
+            });
+
+            if (!userId) {
+                throw new BadRequest({ message: 'User authentication required', req });
+            }
+
+            if (!quizId || score === undefined || score === null) {
+                throw new BadRequest({ message: 'QuizId and score are required', req });
+            }
+
+            let progress = await Progress.findOne({ user: userId });
+            
             if (!progress) {
-                throw new NotFound({ message: 'Progress not found', req }, 'info');
+                progress = new Progress({
+                    user: userId,
+                    completedQuizzes: [],
+                    totalScore: 0,
+                    totalCompletedQuizzes: 0
+                });
             }
 
             const minScore = 8;
@@ -38,15 +67,23 @@ const progressController = {
             }
 
             // Check if the quiz is already completed
-            const existingQuiz = progress.completedQuizzes.find(quiz => quiz.quizId.equals(quizId));
-            // console.log(existingQuiz)
-            if (existingQuiz) {
-                if (existingQuiz.score < score) {
-                    existingQuiz.score = score; 
+            const existingQuizIndex = progress.completedQuizzes.findIndex(
+                quiz => quiz.quizId.toString() === quizId.toString()
+            );
+
+            if (existingQuizIndex !== -1) {
+                // Update existing quiz score if new score is higher
+                const existingScore = progress.completedQuizzes[existingQuizIndex].score;
+                if (score > existingScore) {
+                    progress.completedQuizzes[existingQuizIndex].score = score;
                 } else {
-                    return new SuccessResponse({ message: 'New score is not higher than existing score, no update made', req }).send(res);
+                    return new SuccessResponse({ 
+                        message: 'New score is not higher than existing score, no update made', 
+                        req 
+                    }).send(res);
                 }
             } else {
+                // Add new completed quiz
                 progress.completedQuizzes.push({ quizId, score });
             }
 
@@ -56,12 +93,14 @@ const progressController = {
 
             await progress.save();
 
-            return new SuccessResponse({ message: 'Progress updated successfully', req }).send(res);
+            return new SuccessResponse({ 
+                message: 'Progress updated successfully', 
+                req 
+            }).send(res);
         } catch (error) {
             return handleErrorResponse(error, req, res);
         }
-    },
-
-}
+    }
+};
 
 export default progressController;

@@ -50,13 +50,17 @@ const Dashboard = () => {
         }
     };
 
-    const handleQuizClick = (courseTitle, quizId, quizTitle) => {
-        // Store quiz data in localStorage or context if needed
-        localStorage.setItem('currentQuiz', JSON.stringify({
+    const handleQuizClick = (courseTitle, quiz, quizTitle) => {
+        const quizId = typeof quiz === 'object' ? quiz._id : quiz;
+        
+        const quizData = {
             courseTitle,
-            quizId,
-            quizTitle
-        }));
+            quizId: quizId, 
+            quizTitle: typeof quiz === 'object' ? quiz.title : quizTitle
+        };
+        
+        console.log('Storing quiz data:', quizData); 
+        localStorage.setItem('currentQuiz', JSON.stringify(quizData));
     };
 
     if (!user) {
@@ -104,17 +108,25 @@ const Dashboard = () => {
 
                         {expandedCourses.includes(course._id) ? (
                             <div>
-                                {course.quiz?.map(quiz => (
-                                    <li key={quiz._id} className="w-full flex justify-between items-center list-none">
-                                        <Link
-                                            to={`/quiz/${course.courseTitle}/${quiz.title}`}
-                                            className="text-blue-500 text-lg hover:bg-slate-100 w-full p-2 block"
-                                            onClick={() => handleQuizClick(course.courseTitle, quiz._id, quiz.title)}
+                                {course.quiz?.map((quiz, index) => {
+                                    const quizId = typeof quiz === 'object' ? quiz._id : quiz;
+                                    const quizTitle = typeof quiz === 'object' ? quiz.title : `Quiz ${index + 1}`;
+                                    
+                                    return (
+                                        <li 
+                                            key={`${course._id}-${quizId}-${index}`}
+                                            className="w-full flex justify-between items-center list-none"
                                         >
-                                            {quiz.title}
-                                        </Link>
-                                    </li>
-                                ))}
+                                            <Link
+                                                to={`/quiz/${encodeURIComponent(course.courseTitle)}/${quizId}`}
+                                                className="text-blue-500 text-lg hover:bg-slate-100 w-full p-2 block"
+                                                onClick={() => handleQuizClick(course.courseTitle, quiz, quizTitle)}
+                                            >
+                                                {quizTitle}
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
                                 <button 
                                     onClick={() => toggleQuizVisibility(course._id)} 
                                     className="text-blue-500 hover:underline mt-2"

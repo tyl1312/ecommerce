@@ -67,7 +67,7 @@ const courseController = {
     // Path: /course/all
     getAllCourses: async (req, res) => {
         try {
-            let courses = await Course.find();
+            let courses = await Course.find().populate('quiz', 'title description');
             
             // If no courses are found, create some sample data
             if (!courses || courses.length === 0) {
