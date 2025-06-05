@@ -155,10 +155,26 @@ const courseController = {
     // Path: /course/many
     getManyCourses: async (req, res) => {
         try {
-            const courseIds = req.query.ids;
+            console.log('getManyCourses - req.query:', req.query); 
+            
+            let courseIds = req.query.ids || req.query['ids[]'];
+            
+            console.log('Raw courseIds:', courseIds);   
+
+            if (Array.isArray(courseIds)) {
+                console.log('Course IDs received as array:', courseIds);
+            } else if (typeof courseIds === 'string') {
+                courseIds = courseIds.includes(',') ? courseIds.split(',') : [courseIds];
+                console.log('Course IDs converted from string:', courseIds);
+            } else {
+                courseIds = [];
+            }
+            
             if (!courseIds || courseIds.length === 0) {
                 throw new BadRequest({ message: 'No course IDs provided', req }, 'info');
             }
+            
+            console.log('Final processed courseIds:', courseIds); 
 
             const courses = await Course.find({ _id: { $in: courseIds } }).select('courseTitle');
             if (!courses || courses.length === 0) {

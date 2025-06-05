@@ -1,32 +1,31 @@
 import express from 'express';
 import questionController from '../controllers/questionController.js';
 import { authenticateToken, isAdmin } from '../middleware/authMiddleware.js';
-import csrfMiddleware, { verifyCsrfToken } from '../middleware/csrfProtection.js';
 
 const router = express.Router();
 
-// CREATE QUIZ
-router.post('/', authenticateToken, isAdmin, verifyCsrfToken, csrfMiddleware, questionController.createQuestion);
+// CREATE QUESTION 
+router.post('/', authenticateToken, isAdmin, questionController.createQuestion);
 
-// GET ALL QUIZZES REFERENCE
+// GET ALL QUESTIONS REFERENCE
 router.get('/', authenticateToken, questionController.getAllQuestionsReference);
 
-// GET ALL QUIZZES
+// GET ALL QUESTIONS
 router.get('/all', authenticateToken, questionController.getAllQuestions);
 
-// GET MANY QUIZZES
+// GET MANY QUESTIONS
 router.get('/many', authenticateToken, questionController.getManyQuestions);
 
-// UPDATE QUIZ
-router.put('/edit/:id', authenticateToken, isAdmin, verifyCsrfToken, csrfMiddleware, questionController.updateQuestionById);
+// UPDATE QUESTION 
+router.put('/edit/:id', authenticateToken, isAdmin, questionController.updateQuestionById);
 
-// DELETE QUIZ BY ID
-router.delete('/delete/:id', authenticateToken, isAdmin, verifyCsrfToken, csrfMiddleware, questionController.deleteQuestionById);
+// DELETE QUESTION BY ID 
+router.delete('/delete/:id', authenticateToken, isAdmin, questionController.deleteQuestionById);
 
-// DELETE MANY QUIZZES
-router.delete('/deleteMany', authenticateToken, isAdmin, verifyCsrfToken, csrfMiddleware, questionController.deleteManyQuestions);
+// DELETE MANY QUESTIONS 
+router.delete('/deleteMany', authenticateToken, isAdmin, questionController.deleteManyQuestions);
 
-// GET QUIZ BY ID
+// GET QUESTION BY ID
 router.get('/:id', authenticateToken, questionController.getQuestionById);
 
 export default router;

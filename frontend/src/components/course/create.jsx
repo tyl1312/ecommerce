@@ -8,12 +8,12 @@ const validateFile = (file) => {
     }
     console.log(file);
     const allowedExtensions = ['jpg', 'jpeg', 'png'];
-    const fileExtension = file.rawFile.name.split('.').pop().toLowerCase(); // Sửa thành 'file.rawFile.name' thay vì 'file.title'
+    const fileExtension = file.rawFile.name.split('.').pop().toLowerCase();
     if (!allowedExtensions.includes(fileExtension)) {
         return 'Invalid file type. Only JPG, JPEG, and PNG are allowed.';
     }
 
-    return undefined; // No error
+    return undefined; 
 };
 
 const CourseCreate = () => {
@@ -24,20 +24,18 @@ const CourseCreate = () => {
             const formData = new FormData();
             formData.append('courseTitle', values.courseTitle);
             formData.append('description', values.description);
-            formData.append('image', values.image.rawFile); // Truy cập rawFile để lấy đối tượng File
+            formData.append('image', values.image.rawFile);
 
-            const response = await axios.post(import.meta.env.VITE_API_URL + '/course/', formData, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/courses/`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'X-CSRF-Token': localStorage.getItem('csrfToken')
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
                 withCredentials: true
             });
-            localStorage.setItem('csrfToken', response.headers['x-csrf-token']);
+            
             navigate('/adminPanel/course');
         } catch (error) {
-            const csrfToken = error.response.headers['x-csrf-token'];
-            localStorage.setItem('csrfToken', csrfToken);
             console.error('Error creating course:', error);
         }
     };

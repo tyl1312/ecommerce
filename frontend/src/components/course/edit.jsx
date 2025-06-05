@@ -6,7 +6,7 @@ const validateFile = (file) => {
     console.log("Change Image", file)
     if (!file || typeof file !== 'object') {
         console.log("No file")
-        return undefined; // No error if no file is provided or file is not an object
+        return undefined;  
     }
     console.log(file);
     const allowedExtensions = ['jpg', 'jpeg', 'png'];
@@ -14,7 +14,7 @@ const validateFile = (file) => {
     if (!allowedExtensions.includes(fileExtension)) {
         return 'Invalid file type. Only JPG, JPEG, and PNG are allowed.';
     }
-    return undefined; // No error
+    return undefined;
 };
 
 const CourseEdit = () => {
@@ -25,26 +25,29 @@ const CourseEdit = () => {
             const formData = new FormData();
             formData.append('courseTitle', values.courseTitle);
             formData.append('description', values.description);
-            formData.append('image', values.image.rawFile);
+            if (values.image && values.image.rawFile) {
+                formData.append('image', values.image.rawFile);
+            }
             formData.append('estimatedTime', values.estimatedTime);
             formData.append('level', values.level);
-            formData.append('quiz', values.quiz);
+            if (values.quiz) {
+                formData.append('quiz', values.quiz.join(','));
+            }
 
-            const response = await axios.put(import.meta.env.VITE_API_URL + '/course/edit/' + values.id, formData, {
+            const response = await axios.put(`${import.meta.env.VITE_API_URL}/api/courses/edit/${values.id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'X-CSRF-Token': localStorage.getItem('csrfToken')
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
                 withCredentials: true
             });
-            localStorage.setItem('csrfToken', response.headers['x-csrf-token'])
+            
             navigate('/adminPanel/course');
         } catch (error) {
-            const csrfToken = error.response.headers['x-csrf-token'];
-            localStorage.setItem('csrfToken', csrfToken);
             console.error('Error updating course:', error);
         }
     };
+
     return (
         <div className="w-full min-h-[calc(100vh-72px)] py-14 px-10">
             <Edit >

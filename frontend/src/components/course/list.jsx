@@ -38,8 +38,8 @@ const CourseList = () => {
                             render={formatEstimatedTime}
                             sortBy="estimatedTime"
                         />
-                        <EditButton basepath="/courses" />
-                        <DeleteButton basepath="/courses" />
+                        <EditButton />
+                        <DeleteButton />
                     </Datagrid>
                 )}
 

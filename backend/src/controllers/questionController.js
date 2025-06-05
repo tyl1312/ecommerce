@@ -66,10 +66,26 @@ const questionController = {
     // Path: /question/many
     getManyQuestions: async (req, res) => {
         try {
-            const questionIds = req.query.ids;
+            console.log('getManyQuestions - req.query:', req.query); 
+            
+            let questionIds = req.query.ids || req.query['ids[]'];
+            
+            console.log('Raw questionIds:', questionIds); 
+            
+            if (Array.isArray(questionIds)) {
+                console.log('Question IDs received as array:', questionIds);
+            } else if (typeof questionIds === 'string') {
+                questionIds = questionIds.includes(',') ? questionIds.split(',') : [questionIds];
+                console.log('Question IDs converted from string:', questionIds);
+            } else {
+                questionIds = [];
+            }
+            
             if (!questionIds || questionIds.length === 0) {
                 throw new BadRequest({ message: 'No question IDs provided', req }, 'info');
             }
+            
+            console.log('Final processed questionIds:', questionIds); 
 
             const questions = await Question.find({ _id: { $in: questionIds } });
             if (!questions || questions.length === 0) {
