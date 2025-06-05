@@ -41,7 +41,7 @@ export const setExpirationTime = (expirationTime) => {
 
 export const checkStatus = () => async dispatch => {
     try {
-        const response = await axios.get(import.meta.env.VITE_APP_API_URL + '/user/check-login', { withCredentials: true });
+        const response = await axios.get(import.meta.env.VITE_API_URL + '/user/check-login', { withCredentials: true });
         if (response.status === 200) {
             dispatch(setLoggedIn(true));
             dispatch(setUserData(response.data.user));
@@ -53,7 +53,7 @@ export const checkStatus = () => async dispatch => {
 
 export const logout = () => async dispatch => {
     try {
-        const response = await axios.post(import.meta.env.VITE_APP_API_URL + '/user/logout',
+        const response = await axios.post(import.meta.env.VITE_API_URL + '/user/logout',
             null,
             {
                 withCredentials: true,
@@ -77,7 +77,7 @@ export const logout = () => async dispatch => {
 
 export const refreshAccessToken = () => async dispatch => {
     try {
-        const response = await axios.post(import.meta.env.VITE_APP_API_URL + '/user/refresh-token', null, { withCredentials: true });
+        const response = await axios.post(import.meta.env.VITE_API_URL + '/user/refresh-token', null, { withCredentials: true });
         if (response.status === 200) {
             console.log("response:", jwtDecode(response.data.accessToken).exp);
             dispatch(setExpirationTime(jwtDecode(response.data.accessToken).exp));

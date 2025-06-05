@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Register = ({ captchaToken }) => {
+const Register = ({ captchaToken, onRegisterSuccess, onRegisterFailure }) => {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [username, setUsername] = useState("");
@@ -18,12 +18,16 @@ const Register = ({ captchaToken }) => {
         if (!email || !username || !password || !confirmPassword) {
             setError("Please fill in all fields.");
             setLoading(false);
+            // Reset captcha on validation failure
+            if (onRegisterFailure) onRegisterFailure();
             return;
         }
 
         if (password !== confirmPassword) {
             setError("Passwords don't match.");
             setLoading(false);
+            // Reset captcha on validation failure
+            if (onRegisterFailure) onRegisterFailure();
             return;
         }
 
@@ -49,6 +53,8 @@ const Register = ({ captchaToken }) => {
                 const data = await res.json();
                 sessionStorage.setItem("registrationId", data.registrationId);
                 navigate(`/otp/verify?email=${encodeURIComponent(email)}&purpose=registration`);
+                // Call success handler
+                if (onRegisterSuccess) onRegisterSuccess();
             } else {
                 const data = await res.json();
 
@@ -57,10 +63,15 @@ const Register = ({ captchaToken }) => {
                 } else {
                     setError(data.message || "Registration failed.");
                 }
+                
+                // Reset captcha on registration failure
+                if (onRegisterFailure) onRegisterFailure();
             }
         } catch (err) {
             console.error('Registration error:', err);
             setError("Registration failed. Please try again.");
+            // Reset captcha on network/other errors
+            if (onRegisterFailure) onRegisterFailure();
         } finally {
             setLoading(false);
         }

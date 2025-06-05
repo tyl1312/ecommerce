@@ -39,7 +39,7 @@ export const Dashboard = () => {
 
         try {
             const response = await axios.put(
-                `${import.meta.env.VITE_APP_API_URL}/user/change-password`,
+                `${import.meta.env.VITE_API_URL}/user/change-password`,
                 inputData,
                 {
                     withCredentials: true,

@@ -78,7 +78,7 @@ const Login = () => {
             try {
                 setLoading(true); // set loading true before making the request
                 const response = await axios.post(
-                    import.meta.env.VITE_APP_API_URL + '/user/login',
+                    import.meta.env.VITE_API_URL + '/user/login',
                     inputData,
                     { withCredentials: true, timeout: 5000}
                 );

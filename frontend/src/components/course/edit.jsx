@@ -30,7 +30,7 @@ const CourseEdit = () => {
             formData.append('level', values.level);
             formData.append('quiz', values.quiz);
 
-            const response = await axios.put(import.meta.env.VITE_APP_API_URL + '/course/edit/' + values.id, formData, {
+            const response = await axios.put(import.meta.env.VITE_API_URL + '/course/edit/' + values.id, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'X-CSRF-Token': localStorage.getItem('csrfToken')

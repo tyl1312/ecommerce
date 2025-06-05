@@ -134,35 +134,45 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (identifier, password, captchaToken, requiresCaptcha = false) => {
         try {
-            const requestBody = { identifier, password };
-
-            //Include reCaptcha if required
-            if (requiresCaptcha && captchaToken) {
-                requestBody.captchaToken = captchaToken;
-            }
-
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody),
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    identifier,
+                    password,
+                    captchaToken,
+                    requiresCaptcha
+                }),
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
-                if (data.requiresCaptcha) {
-                    throw new Error(data.message || "Please complete the captcha verification");
-                }
-                throw new Error(data.message || "Login failed");
+            if (response.ok) {
+                setToken(data.accessToken);
+                localStorage.setItem('accessToken', data.accessToken);
+                
+                await fetchCurrentUser(data.accessToken);
+                
+                return { 
+                    success: true, 
+                    user: data.user, 
+                    message: data.message 
+                };
+            } else {
+                return { 
+                    success: false, 
+                    message: data.message || 'Login failed' 
+                };
             }
-
-            localStorage.setItem('accessToken', data.accessToken);
-            setToken(data.accessToken);
-            setUser(data.user);
-            return { success: true, user: data.user };
         } catch (error) {
-            console.error("Login error:", error);
-            return { success: false, message: error.message };
+            console.error('Login error:', error);
+            return { 
+                success: false, 
+                message: 'Network error occurred' 
+            };
         }
     };
 

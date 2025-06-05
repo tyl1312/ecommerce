@@ -56,7 +56,7 @@ const Profile = () => {
 
         try {
             const response = await axios.put(
-                `${import.meta.env.VITE_APP_API_URL}/user/profile`,
+                `${import.meta.env.VITE_API_URL}/user/profile`,
                 inputData,
                 { withCredentials: true,
                     headers: {
@@ -100,7 +100,7 @@ const Profile = () => {
 
         try {
             const response = await axios.put(
-                `${import.meta.env.VITE_APP_API_URL}/user/change-password`,
+                `${import.meta.env.VITE_API_URL}/user/change-password`,
                 inputData,
                 {
                     withCredentials: true,

@@ -11,7 +11,7 @@ const ProtectedRoute = ({ element: Component, ...rest }) => {
     useEffect(() => {
         if (token) {
             axios.post( 
-                import.meta.env.VITE_APP_API_URL + '/user/validate-reset-token', 
+                import.meta.env.VITE_API_URL + '/user/validate-reset-token', 
                 { token })
                 .then(() => setIsValidToken(true))
                 .catch(() => setIsValidToken(false));

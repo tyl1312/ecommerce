@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReCAPTCHA from "react-google-recaptcha";
 import Login from "./Login";
 import Register from "./Register";
@@ -15,6 +15,7 @@ const AuthPage = ({ mode }) => {
     const [captchaToken, setCaptchaToken] = useState("");
     const [showRecaptcha, setShowRecaptcha] = useState(false);
     const [failedAttempts, setFailedAttempts] = useState(0);
+    const recaptchaRef = useRef(null); // Add ref for reCAPTCHA
 
     //Check failed login attempts
     useEffect(() => {
@@ -41,6 +42,9 @@ const AuthPage = ({ mode }) => {
         if (newAttempts >= 3) {
             setShowRecaptcha(true);
         }
+        
+        // Reset reCAPTCHA on login failure
+        resetCaptcha();
     };
 
     const handleAuthSuccess = () => {
@@ -48,6 +52,20 @@ const AuthPage = ({ mode }) => {
         sessionStorage.removeItem('captchaToken');
         setFailedAttempts(0);
         setShowRecaptcha(false);
+        setCaptchaToken("");
+    };
+
+    const handleAuthFailure = () => {
+        // Reset reCAPTCHA on any auth failure
+        resetCaptcha();
+    };
+
+    const resetCaptcha = () => {
+        if (recaptchaRef.current) {
+            recaptchaRef.current.reset();
+            setCaptchaToken("");
+            sessionStorage.removeItem("captchaToken");
+        }
     };
 
     const handleCaptchaChange = (token) => {
@@ -58,7 +76,7 @@ const AuthPage = ({ mode }) => {
         } else {
             sessionStorage.removeItem("captchaToken");
         }
-    }
+    };
 
     return (
         <div className="split-container">
@@ -91,6 +109,7 @@ const AuthPage = ({ mode }) => {
                         <Register
                             captchaToken={captchaToken}
                             onRegisterSuccess={handleAuthSuccess}
+                            onRegisterFailure={handleAuthFailure} // Add failure handler
                             requiresCaptcha={showRecaptcha}
                         />
                     )}
@@ -109,6 +128,7 @@ const AuthPage = ({ mode }) => {
                     {showRecaptcha && (
                         <div className="captcha-container">
                             <ReCAPTCHA
+                                ref={recaptchaRef} // Add ref
                                 sitekey={RECAPTCHA_KEY}
                                 onChange={handleCaptchaChange}
                             />

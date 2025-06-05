@@ -15,15 +15,29 @@ import QuizEdit from "../components/quiz/edit";
 import QuestionList from "../components/question/list";
 import QuestionCreate from "../components/question/create";
 import QuestionEdit from "../components/question/edit";
-import { Dashboard } from "../components/home/page";
-
+import Dashboard from "../pages/Dashboard";  
+import { useAuth } from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const AdminPanel = () => {
+    const { user, loading, accessToken } = useAuth();
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!accessToken || !user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (user.role !== 'admin') {
+        return <div>Access denied. Admin privileges required.</div>;
+    }
 
     return (
         <Admin dataProvider={dataProvider} basename="/adminPanel" theme={nanoLightTheme} darkTheme={nanoDarkTheme} dashboard={Dashboard}>
             <Resource
-                name="user"
+                name="users"
                 recordRepresentation="username"
                 list={UserList}
                 edit={UserEdit}
@@ -54,7 +68,6 @@ const AdminPanel = () => {
                 list={QuestionList}
                 create={QuestionCreate}
                 edit={QuestionEdit}/>
-
         </Admin>
     );
 }

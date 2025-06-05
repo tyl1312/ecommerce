@@ -25,7 +25,7 @@ const ResetPassword = () => {
         // Send form data to the server
         try {
             const response = await axios.post(
-                `${import.meta.env.VITE_APP_API_URL}/user/reset-password/${token}`,
+                `${import.meta.env.VITE_API_URL}/user/reset-password/${token}`,
                 inputData);
 
             if (response.status === 200) {

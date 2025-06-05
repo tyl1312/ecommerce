@@ -18,12 +18,14 @@ const Login = ({ captchaToken, onLoginFailure, onLoginSuccess, requiresCaptcha }
         if (!identifier || !password) {
             setError("Please enter your email/username and password.");
             setLoading(false);
+            onLoginFailure?.();
             return;
         }
 
         if (requiresCaptcha && !captchaToken) {
             setError("Please complete the captcha verification.");
             setLoading(false);
+            onLoginFailure?.();
             return;
         }
 
@@ -32,7 +34,13 @@ const Login = ({ captchaToken, onLoginFailure, onLoginSuccess, requiresCaptcha }
             
             if (result.success) {
                 onLoginSuccess?.();
-                navigate("/dashboard");
+                
+                // Check user role and navigate accordingly
+                if (result.user && result.user.role === "admin") {
+                    navigate("/adminPanel"); 
+                } else {
+                    navigate("/dashboard"); 
+                }
             } else {
                 setError(result.message || "Login failed");
                 onLoginFailure?.();

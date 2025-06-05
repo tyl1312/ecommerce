@@ -26,7 +26,7 @@ const CourseCreate = () => {
             formData.append('description', values.description);
             formData.append('image', values.image.rawFile); // Truy cập rawFile để lấy đối tượng File
 
-            const response = await axios.post(import.meta.env.VITE_APP_API_URL + '/course/', formData, {
+            const response = await axios.post(import.meta.env.VITE_API_URL + '/course/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'X-CSRF-Token': localStorage.getItem('csrfToken')
