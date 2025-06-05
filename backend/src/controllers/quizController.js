@@ -61,10 +61,31 @@ const quizController = {
     // Path: /quiz/many
     getManyQuizzes: async (req, res) => {
         try {
-            const quizIds = req.query.ids;
+            console.log('getManyQuizzes - req.query:', req.query); // Debug log
+            
+            // Handle the actual format from React Admin: 'ids[]'
+            let quizIds = req.query.ids || req.query['ids[]'];
+            
+            console.log('Raw quizIds:', quizIds); // Debug log
+            
+            // Handle different formats:
+            if (Array.isArray(quizIds)) {
+                // Already an array, use as-is
+                console.log('IDs received as array:', quizIds);
+            } else if (typeof quizIds === 'string') {
+                // String format, split by comma
+                quizIds = quizIds.includes(',') ? quizIds.split(',') : [quizIds];
+                console.log('IDs converted from string:', quizIds);
+            } else {
+                // No IDs provided
+                quizIds = [];
+            }
+            
             if (!quizIds || quizIds.length === 0) {
                 throw new BadRequest({ message: 'No quiz IDs provided', req }, 'warn');
             }
+            
+            console.log('Final processed quizIds:', quizIds); // Debug log
 
             const quizzes = await Quiz.find({ _id: { $in: quizIds } }).populate('course', 'courseTitle');
             if (!quizzes || quizzes.length === 0) {
@@ -178,12 +199,20 @@ const quizController = {
     // Path: /quiz/deleteMany
     deleteManyQuizzes: async (req, res) => {
         try {
-            const quizIds = req.body.ids;
+            console.log('deleteManyQuizzes - req.body:', req.body); // Debug log
+            
+            let quizIds = req.body.ids;
 
             if (!Array.isArray(quizIds)) {
-                quizIds = [quizIds];
+                if (typeof quizIds === 'string') {
+                    quizIds = quizIds.split(',');
+                } else {
+                    quizIds = [quizIds];
+                }
             }
-            console.log(quizIds);
+            
+            console.log('Processed quizIds for deletion:', quizIds); 
+            
             if (!quizIds || quizIds.length === 0) {
                 throw new BadRequest({ message: 'No quiz IDs provided', req }, 'info');
             }
@@ -203,7 +232,8 @@ const quizController = {
                 { $pull: { completedQuizzes: { quizId: { $in: quizIds } } } }
             );
 
-            await Quiz.deleteMany({ _id: { $in: quizIds } });
+            const result = await Quiz.deleteMany({ _id: { $in: quizIds } });
+            console.log('Delete result:', result); // Debug log
 
             return new SuccessResponse({ message: "Quizzes deleted successfully", req }).send(res);
         } catch (error) {

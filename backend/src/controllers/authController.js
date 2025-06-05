@@ -32,6 +32,7 @@ const generateAccessToken = (user) => {
             id: user._id,
             email: user.email,
             username: user.username,
+            role: user.role
         },
         process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: '15m' }
@@ -44,6 +45,7 @@ const generateRefreshToken = (user) => {
             id: user._id,
             email: user.email,
             username: user.username,
+            role: user.role
         },
         process.env.REFRESH_TOKEN_SECRET,
         { expiresIn: '1d' }
@@ -60,7 +62,8 @@ const refresh = (req, res) => {
         const accessToken = generateAccessToken({
             _id: payload.id,
             email: payload.email,
-            username: payload.username
+            username: payload.username,
+            role: payload.role
         });
         res.json({ accessToken });
     } catch (err) {
@@ -292,16 +295,19 @@ const login = async (req, res) => {
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'Strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000
         });
 
-        const userObj = user.toObject ? user.toObject() : user;
-        const { hash_password, ...userWithoutPassword } = userObj;
-
-        res.json({
-            user: userWithoutPassword,
-            accessToken: accessToken,
+        res.status(200).json({
+            message: 'Login successful',
+            accessToken,
+            user: {
+                id: user._id,
+                email: user.email,
+                username: user.username,
+                role: user.role
+            }
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -519,6 +525,30 @@ const getExperience = async (req, res) => {
     }
 }
 
+const getAllUsers = async (req, res) => {
+    try {
+        const { page = 1, perPage = 10 } = req.query;
+        const skip = (page - 1) * perPage;
+        
+        const users = await User.find()
+            .select('-hash_password') // Exclude password
+            .skip(skip)
+            .limit(parseInt(perPage));
+            
+        const total = await User.countDocuments();
+        
+        const items = users.map(user => ({
+            ...user.toObject(),
+            id: user._id
+        }));
+        
+        res.status(200).json({ items, total });
+    } catch (error) {
+        console.error('Get all users error:', error);
+        res.status(500).json({ message: 'Failed to fetch users' });
+    }
+};
+
 export default {
     registerPending,
     register,
@@ -529,5 +559,6 @@ export default {
     getCurrentUser,
     updateProfile,
     changePassword,
-    getExperience
+    getExperience,
+    getAllUsers
 };
